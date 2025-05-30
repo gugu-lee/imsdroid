@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace 'com.github.freeims.android_ngn_stack'
-    compileSdk 33
+    compileSdk 32
 
     defaultConfig {
         minSdk 27
