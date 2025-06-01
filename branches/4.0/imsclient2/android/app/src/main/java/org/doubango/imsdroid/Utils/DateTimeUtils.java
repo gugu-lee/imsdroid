@@ -23,7 +23,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import org.doubango.imsdroid.IMSDroid;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.utils.NgnDateTimeUtils;
 
 public class DateTimeUtils extends NgnDateTimeUtils{

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.media.NgnMediaType;
 import org.doubango.ngn.sip.NgnMsrpSession;
 import org.doubango.ngn.utils.NgnListUtils;

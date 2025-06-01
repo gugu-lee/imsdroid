@@ -21,7 +21,7 @@ package org.doubango.imsdroid.Screens;
 
 import java.io.IOException;
 
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.services.INgnConfigurationService;
 import org.doubango.ngn.services.INgnSipService;
 import org.doubango.ngn.sip.NgnPresenceStatus;

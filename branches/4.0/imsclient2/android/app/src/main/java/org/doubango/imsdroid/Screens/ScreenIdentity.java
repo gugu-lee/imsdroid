@@ -19,7 +19,7 @@
 */
 package org.doubango.imsdroid.Screens;
 
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.services.INgnConfigurationService;
 import org.doubango.ngn.utils.NgnConfigurationEntry;
 import org.doubango.ngn.utils.NgnStringUtils;

@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.sip.NgnAVSession;
 import org.doubango.ngn.utils.NgnObservableHashMap;
 import org.doubango.ngn.utils.NgnStringUtils;

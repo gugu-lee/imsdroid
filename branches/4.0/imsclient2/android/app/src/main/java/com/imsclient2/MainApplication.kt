@@ -1,4 +1,4 @@
-package com.imsclient2
+package com.imsclient2;
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -11,20 +11,21 @@ import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
-import com.github.freeims.ngn_stack.sip.LoginPackage
-import org.doubango.ngn.NgnEngine
+import org.doubango.imsdroid.IMSDroid
 
 
 class MainApplication : Application(), ReactApplication {
 
+    companion object {
+        lateinit var imsDroid: IMSDroid
+    }
     override val reactNativeHost: ReactNativeHost =
         object : DefaultReactNativeHost(this) {
             override fun getPackages(): List<ReactPackage> =
                 PackageList(this).packages.apply {
                     // Packages that cannot be autolinked yet can be added manually here, for example:
                     // add(MyReactNativePackage())
-                    add(LoginPackage())
-
+                    add(com.github.freeims.ngn_stack.sip.LoginPackage())
                 }
 
             override fun getJSMainModuleName(): String = "index"
@@ -37,9 +38,6 @@ class MainApplication : Application(), ReactApplication {
 
     override val reactHost: ReactHost
         get() = getDefaultReactHost(applicationContext, reactNativeHost)
-    companion object {
-        lateinit var ngnEngine: NgnEngine
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -48,7 +46,6 @@ class MainApplication : Application(), ReactApplication {
             // If you opted-in for the New Architecture, we load the native entry point for this app.
             load()
         }
-        ngnEngine = NgnEngine.getInstance()
-
+        imsDroid = IMSDroid() // 这里初始化
     }
 }

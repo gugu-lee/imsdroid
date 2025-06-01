@@ -26,7 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 
 
 public class CustomDialog {
@@ -35,7 +35,7 @@ public class CustomDialog {
 		AlertDialog.Builder builder;
 
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View layout = inflater.inflate(R.layout.custom_dialog, null);
+		View layout = inflater.inflate(com.imsclient2.R.layout.custom_dialog, null);
 
 		ImageView ivIcon = (ImageView) layout.findViewById(R.id.custom_dialog_imageView_icon);
 		ivIcon.setImageResource(icon);

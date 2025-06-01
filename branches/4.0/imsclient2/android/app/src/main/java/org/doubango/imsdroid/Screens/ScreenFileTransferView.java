@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.TimerTask;
 
 import org.doubango.imsdroid.Engine;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.imsdroid.Services.IScreenService;
 import org.doubango.ngn.events.NgnInviteEventArgs;
 import org.doubango.ngn.events.NgnMsrpEventArgs;

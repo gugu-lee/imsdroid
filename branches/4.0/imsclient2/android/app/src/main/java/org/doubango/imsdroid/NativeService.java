@@ -43,7 +43,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 public class NativeService extends NgnNativeService {
 	private final static String TAG = NativeService.class.getCanonicalName();
 	public static final String ACTION_STATE_EVENT = TAG + ".ACTION_STATE_EVENT";

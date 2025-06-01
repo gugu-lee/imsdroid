@@ -20,7 +20,7 @@
 package org.doubango.imsdroid.Screens;
 
 import org.doubango.imsdroid.IMSDroid;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 
 import android.os.Bundle;
 import android.widget.TextView;

@@ -19,7 +19,7 @@
 */
 package org.doubango.imsdroid.Screens;
 
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 
 import android.app.Activity;
 import android.content.Context;

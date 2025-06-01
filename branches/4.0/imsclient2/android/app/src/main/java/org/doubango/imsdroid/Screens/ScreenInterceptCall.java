@@ -19,7 +19,7 @@
 */
 package org.doubango.imsdroid.Screens;
 
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.media.NgnMediaType;
 
 import android.app.AlertDialog;

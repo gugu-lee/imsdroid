@@ -26,7 +26,7 @@ import java.util.Map;
 import org.doubango.imsdroid.Engine;
 import org.doubango.imsdroid.IMSDroid;
 import org.doubango.imsdroid.Main;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.imsdroid.Screens.IBaseScreen;
 import org.doubango.imsdroid.Screens.ScreenHome;
 import org.doubango.imsdroid.Services.IScreenService;

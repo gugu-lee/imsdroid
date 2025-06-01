@@ -21,7 +21,7 @@ package org.doubango.imsdroid.Screens;
 
 import org.doubango.imsdroid.CustomDialog;
 import org.doubango.imsdroid.Main;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.ngn.events.NgnEventArgs;
 import org.doubango.ngn.events.NgnRegistrationEventArgs;
 import org.doubango.ngn.services.INgnSipService;

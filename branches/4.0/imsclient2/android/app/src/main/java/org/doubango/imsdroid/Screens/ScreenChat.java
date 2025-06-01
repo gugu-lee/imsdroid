@@ -27,7 +27,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import org.doubango.imsdroid.Engine;
-import com.github.freeims.ngn_stack.R;
+import com.imsclient2.R;
 import org.doubango.imsdroid.Utils.DateTimeUtils;
 import org.doubango.ngn.NgnEngine;
 import org.doubango.ngn.media.NgnMediaType;
