@@ -1,6 +1,7 @@
 package com.github.freeims.ngn_stack.sip;
 
 
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -10,15 +11,21 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 
+import org.doubango.imsdroid.Engine;
+import org.doubango.ngn.NgnApplication;
+import org.doubango.ngn.services.INgnSipService;
+
 
 public class LoginModule extends ReactContextBaseJavaModule {
     private final ReactApplicationContext reactContext;
 
+    private Engine engine;
+    //private NgnApplication ngnApplication;
 
     public LoginModule(ReactApplicationContext reactContext) {
         super(reactContext);
         this.reactContext = reactContext;
-
+        //ngnApplication = new NgnApplication();
     }
 
     @NonNull
@@ -29,11 +36,18 @@ public class LoginModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void login(Promise promise) {
-        //ngnEngine.start();
-        //ngnEngine.getConfigurationService()
-        //        .putString("PCSCF","127.0.0.1");
-        //INgnSipService sipService = ngnEngine.getSipService();
-        //sipService.register(reactContext);
+        try {
+            engine = (Engine) Engine.getInstance();
+//            INgnSipService sipService = engine.getSipService();
+//            sipService.register(reactContext);
+        }catch (ExceptionInInitializerError e){
+            Log.e("LOGIN", "Engine initialization failed: " + e.getMessage(), e);
+            promise.reject("Engine initialization failed", e);
+            return;
+        }
+        catch (Exception e) {
+            Log.e("LOGIN",e.getLocalizedMessage(),e);
+        }
 
         // 这里可以调用你的登录逻辑
         Toast.makeText(reactContext, "Login called from JS", Toast.LENGTH_SHORT).show();

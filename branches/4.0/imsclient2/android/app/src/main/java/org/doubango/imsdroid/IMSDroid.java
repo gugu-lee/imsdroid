@@ -27,6 +27,8 @@ public class IMSDroid extends NgnApplication{
 	private final static String TAG = IMSDroid.class.getCanonicalName();
 	
 	public IMSDroid() {
-    	Log.d(TAG,"IMSDroid()");
+		super();
+		Log.d(TAG,"IMSDroid()");
+
     }
 }

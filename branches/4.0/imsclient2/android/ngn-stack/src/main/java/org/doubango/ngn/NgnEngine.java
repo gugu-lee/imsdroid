@@ -59,6 +59,7 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Vibrator;
 import android.util.Log;
 
@@ -72,7 +73,9 @@ public class NgnEngine {
 	
 	protected static NgnEngine sInstance;
 	private static boolean sInitialized;
-	private static final String DATA_FOLDER = String.format("/data/data/%s", NgnApplication.getContext().getPackageName());
+	private static  String DATA_FOLDER = String.format("/data/data/%s", NgnApplication.getContext().getPackageName());
+
+	//);
 	private static final String LIBS_FOLDER = String.format("%s/lib", NgnEngine.DATA_FOLDER);
 	
 	protected boolean mStarted;
@@ -96,53 +99,80 @@ public class NgnEngine {
 	
 	// This function will be renamed as "initialize()" when "initialize()" get removed
 	private static void initialize2(){
+		Log.i(TAG, "NgnEngine.Initialize()");
 		// do not add try/catch to let the app die if libraries are missing or incompatible
 		if(!sInitialized){
-			// See 'http://code.google.com/p/imsdroid/issues/detail?id=197' for more information
-			// Load Android utils library (required to detect CPU features)
-			boolean haveLibUtils = new File(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libutils_armv5te.so")).exists();
-			if (haveLibUtils) { // only "armeabi-v7a" comes with "libutils.so"
-				System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libutils_armv5te.so"));
-				Log.d(TAG,"CPU_Feature="+AndroidUtils.getCpuFeatures());
-				if(NgnApplication.isCpuNeon()){
-					Log.d(TAG,"isCpuNeon()=YES");
-					System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libtinyWRAP_neon.so"));
-				}
-				else{
-					Log.d(TAG,"isCpuNeon()=NO");
-					System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libtinyWRAP.so"));
-				}
+			String[] supportedAbis = Build.SUPPORTED_ABIS;
+			for(String abi : supportedAbis){
+				Log.i(TAG, "Supported ABI: " + abi);
 			}
-			else {
-				// "armeabi", "mips", "x86"...
-				System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libtinyWRAP.so"));
-			}
-				
-			// If OpenSL ES is supported and know to work on current device then used it
-			if(NgnApplication.isSLEs2KnownToWork()){
-				final String pluginPath = String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libplugin_audio_opensles.so");
-				
-				// returned value is the number of registered add-ons (2 = 1 consumer + 1 producer)
-				if(MediaSessionMgr.registerAudioPluginFromFile(pluginPath) < 2){
-					// die if cannot load add-ons
-					throw new RuntimeException("Failed to register audio plugin with path=" + pluginPath);
-				}
-				
-				Log.d(TAG, "Using OpenSL ES audio driver");
-			}
-			// otherwise, use AudioTrack/Record
-			else{
-				ProxyAudioProducer.registerPlugin();
-				ProxyAudioConsumer.registerPlugin();
-			}
-			
-			ProxyVideoProducer.registerPlugin();
-			ProxyVideoConsumer.registerPlugin();
-			
+//			if (NgnApplication.getInstance() == null) {
+//				throw new RuntimeException("NgnApplication.getContext() is null");
+//			}
+//
+//			// See 'http://code.google.com/p/imsdroid/issues/detail?id=197' for more information
+//			// Load Android utils library (required to detect CPU features)
+//			boolean haveLibUtils = new File(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libutils_armv5te.so")).exists();
+//			if (haveLibUtils) { // only "armeabi-v7a" comes with "libutils.so"
+//				//System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libutils_armv5te.so"));
+//				System.loadLibrary("libutils_armv5te");
+//				Log.i(TAG,"CPU_Feature="+AndroidUtils.getCpuFeatures());
+//				if(NgnApplication.isCpuNeon()){
+//					Log.d(TAG,"isCpuNeon()=YES");
+////					System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libtinyWRAP_neon.so"));
+//					System.loadLibrary("libtinyWRAP_neon");
+//				}
+//				else{
+//					Log.d(TAG,"isCpuNeon()=NO");
+//					//System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libtinyWRAP.so"));
+//			System.loadLibrary( "tinySIGCOMP");
+//			System.loadLibrary( "tinySMS");
+//			System.loadLibrary( "tinyXCAP");
+//			System.loadLibrary( "tinyDAV");
+//			System.loadLibrary( "tinyBFCP");
+//			//System.loadLibrary( "tinySAK");
+//			System.loadLibrary( "tinySDP");
+//			System.loadLibrary( "tinyHTTP");
+//			System.loadLibrary( "tinyIPSec");
+//			System.loadLibrary( "tinyMEDIA");
+//			System.loadLibrary( "tinyRTP");
+//			System.loadLibrary( "tinyNET");
+//			System.loadLibrary( "tinyHTTP");
+//			System.loadLibrary( "tinySIP");
+			System.loadLibrary( "tinyWRAP");
+//				}
+//			}
+//			else {
+//				// "armeabi", "mips", "x86"...
+//				//System.load(String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libtinyWRAP.so"));
+//				System.loadLibrary("tinyWRAP");
+//			}
+//
+//			// If OpenSL ES is supported and know to work on current device then used it
+//			if(NgnApplication.isSLEs2KnownToWork()){
+////				final String pluginPath = String.format("%s/%s", NgnEngine.LIBS_FOLDER, "libplugin_audio_opensles.so");
+////
+////				// returned value is the number of registered add-ons (2 = 1 consumer + 1 producer)
+////				if(MediaSessionMgr.registerAudioPluginFromFile(pluginPath) < 2){
+////					// die if cannot load add-ons
+////					throw new RuntimeException("Failed to register audio plugin with path=" + pluginPath);
+////				}
+//
+//				Log.d(TAG, "Using OpenSL ES audio driver");
+//			}
+//			// otherwise, use AudioTrack/Record
+//			else{
+//				ProxyAudioProducer.registerPlugin();
+//				ProxyAudioConsumer.registerPlugin();
+//			}
+//
+//			ProxyVideoProducer.registerPlugin();
+//			ProxyVideoConsumer.registerPlugin();
+//
 			SipStack.initialize();
-			
-			NgnProxyPluginMgr.Initialize();
-			
+//
+//			NgnProxyPluginMgr.Initialize();
+			Log.i(TAG, "NgnEngine.Initialize() done");
 			sInitialized = true;
 		}
 	}

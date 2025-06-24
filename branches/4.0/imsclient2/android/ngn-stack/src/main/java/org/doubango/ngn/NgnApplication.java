@@ -300,7 +300,7 @@ import android.view.WindowManager;
  * Global object defining the application. You should extends this class in your own
  * Android application. 
  */
-public class NgnApplication extends Application{
+public class NgnApplication extends Application {
 	private final static String TAG = NgnApplication.class.getCanonicalName();
 	
 	private static NgnApplication sInstance;
@@ -339,7 +339,12 @@ public class NgnApplication extends Application{
     // This function is called by the package manager, you must never explicitly invoke it.
     // Do not forget to add/change the <application /> section in your manifest as done in IMSDroid or all other test apps
     public NgnApplication() {
-    	sInstance = this;
+
+
+		sInstance = this;
+		Log.i("INIT","NgnApplication instance created");
+		//Log.i("INIT",this.getPackageName());
+
     }
 
     public static NgnApplication getInstance(){

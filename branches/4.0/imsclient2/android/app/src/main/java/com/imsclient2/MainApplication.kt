@@ -1,6 +1,6 @@
 package com.imsclient2;
 
-import android.app.Application
+import android.util.Log
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -12,12 +12,18 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
 import org.doubango.imsdroid.IMSDroid
+import org.doubango.ngn.NgnApplication
 
 
-class MainApplication : Application(), ReactApplication {
+class MainApplication : NgnApplication(), ReactApplication {
+
 
     companion object {
-        lateinit var imsDroid: IMSDroid
+
+    }
+
+    init {
+
     }
     override val reactNativeHost: ReactNativeHost =
         object : DefaultReactNativeHost(this) {
@@ -46,6 +52,7 @@ class MainApplication : Application(), ReactApplication {
             // If you opted-in for the New Architecture, we load the native entry point for this app.
             load()
         }
-        imsDroid = IMSDroid() // 这里初始化
+
+
     }
 }
