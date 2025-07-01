@@ -1,22 +1,22 @@
 
-def nodePath = new File(["which", "node"].execute().text.trim())
-def npxPath = new File(["which", "npx"].execute().text.trim())
+// def nodePath = new File(["which", "node"].execute().text.trim())
+// def npxPath = new File(["which", "npx"].execute().text.trim())
 
-project.ext.react = [
-    // 使用绝对路径
-    nodeExecutableAndArgs: [nodePath.absolutePath],
-    command: npxPath.absolutePath,
-    cliPath: "../node_modules/@react-native-community/cli/build/bin.js",
+// project.ext.react = [
+//     // 使用绝对路径
+//     nodeExecutableAndArgs: [nodePath.absolutePath],
+//     command: npxPath.absolutePath,
+//     cliPath: "../node_modules/@react-native-community/cli/build/bin.js",
     
-    // 添加环境变量
-    extraPackagerArgs: ["--max-workers=4"],
-    bundleConfig: "metro.config.js"
-]
+//     // 添加环境变量
+//     extraPackagerArgs: ["--max-workers=4"],
+//     bundleConfig: "metro.config.js"
+// ]
 
-// 打印调试信息
-println "Node路径: ${nodePath.absolutePath}"
-println "NPX路径: ${npxPath.absolutePath}"
-println "CLI路径存在: ${new File(project.ext.react.cliPath).exists()}"
+// // 打印调试信息
+// println "Node路径: ${nodePath.absolutePath}"
+// println "NPX路径: ${npxPath.absolutePath}"
+// println "CLI路径存在: ${new File(project.ext.react.cliPath).exists()}"
 
 buildscript {
     ext {
