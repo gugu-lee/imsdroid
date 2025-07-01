@@ -38,8 +38,6 @@ public class LoginModule extends ReactContextBaseJavaModule {
     public void login(Promise promise) {
         try {
             engine = (Engine) Engine.getInstance();
-//            INgnSipService sipService = engine.getSipService();
-//            sipService.register(reactContext);
         }catch (ExceptionInInitializerError e){
             Log.e("LOGIN", "Engine initialization failed: " + e.getMessage(), e);
             promise.reject("Engine initialization failed", e);
