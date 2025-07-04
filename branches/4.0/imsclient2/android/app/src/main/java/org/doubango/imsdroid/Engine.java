@@ -34,6 +34,8 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.util.Log;
 
+import com.imsclient2.MainApplication;
+
 public class Engine extends NgnEngine{
 	private final static String TAG = Engine.class.getCanonicalName();
 	
@@ -133,7 +135,7 @@ public class Engine extends NgnEngine{
 			return;
 		}
 
-		Intent intent = new Intent(IMSDroid.getContext(), Main.class);
+		Intent intent = new Intent(MainApplication.getContext(), Main.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 
 		switch (notifId) {
@@ -169,13 +171,13 @@ public class Engine extends NgnEngine{
 		}
 
 		PendingIntent contentIntent = PendingIntent.getActivity(
-				IMSDroid.getContext(),
+				MainApplication.getContext(),
 				notifId,
 				intent,
 				PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
 		);
 
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(IMSDroid.getContext(), "default_channel_id")
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(MainApplication.getContext(), "default_channel_id")
 				.setSmallIcon(drawableId)
 				.setContentTitle(CONTENT_TITLE)
 				.setContentText(tickerText)
@@ -186,7 +188,7 @@ public class Engine extends NgnEngine{
 			builder.setOngoing(true);
 		}
 
-		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(IMSDroid.getContext());
+		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainApplication.getContext());
 		//notificationManager.notify(notifId, builder.build());
 	}
 	

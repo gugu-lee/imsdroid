@@ -51,11 +51,18 @@ public class NgnNativeService extends Service {
 		super.onCreate();
 		Log.d(TAG, "onCreate()");
 	}
-	
+
 	@Override
-	public void onStart(Intent intent, int startId) {
-		super.onStart(intent, startId);
-		Log.d(TAG, "onStart()");
+	public void onStart(Intent intent, int startId)
+	{
+		Log.i(TAG, "onStart()");
+		super.onStart(intent,startId);
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags,int startId) {
+		Log.i(TAG, "onStartCommand()");
+		return super.onStartCommand(intent, flags,startId);
 	}
 	
 	@Override

@@ -20,6 +20,8 @@
 package org.doubango.imsdroid.Screens;
 
 import org.doubango.imsdroid.IMSDroid;
+
+import com.imsclient2.MainApplication;
 import com.imsclient2.R;
 
 import android.os.Bundle;
@@ -41,6 +43,6 @@ public class ScreenAbout extends BaseScreen {
         TextView textView = (TextView)this.findViewById(R.id.screen_about_textView_copyright);
         String copyright = this.getString(R.string.copyright);
 		textView.setText(String.format(copyright,
-				IMSDroid.getVersionName(), this.getString(R.string.doubango_revision)));
+				MainApplication.getVersionName(), this.getString(R.string.doubango_revision)));
 	}
 }

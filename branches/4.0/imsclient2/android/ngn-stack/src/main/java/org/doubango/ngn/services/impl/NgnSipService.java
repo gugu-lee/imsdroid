@@ -328,7 +328,7 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 
 		// Set Proxy-CSCF
 		mPreferences.setPcscfHost(mConfigurationService.getString(
-				NgnConfigurationEntry.NETWORK_PCSCF_HOST, null)); // null will trigger DNS NAPTR+SRV
+				NgnConfigurationEntry.NETWORK_PCSCF_HOST, NgnConfigurationEntry.DEFAULT_NETWORK_PCSCF_HOST)); // null will trigger DNS NAPTR+SRV
 		mPreferences.setPcscfPort(mConfigurationService.getInt(
 				NgnConfigurationEntry.NETWORK_PCSCF_PORT,
 				NgnConfigurationEntry.DEFAULT_NETWORK_PCSCF_PORT));
@@ -547,6 +547,7 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 			String remoteParty, String date) {
 		final Intent intent = new Intent(
 				NgnMessagingEventArgs.ACTION_MESSAGING_EVENT);
+		Log.d(TAG,NgnMessagingEventArgs.ACTION_MESSAGING_EVENT);
 		intent.putExtra(NgnMessagingEventArgs.EXTRA_REMOTE_PARTY, remoteParty);
 		intent.putExtra(NgnMessagingEventArgs.EXTRA_DATE, date);
 		intent.putExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED, args);
@@ -1295,6 +1296,7 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 
 				/* Alert the user and add the message to the history */
 				if (content != null) {
+					Log.i(TAG,new String(content));
 					mSipService
 							.broadcastMessagingEvent(
 									new NgnMessagingEventArgs(_session.getId(),

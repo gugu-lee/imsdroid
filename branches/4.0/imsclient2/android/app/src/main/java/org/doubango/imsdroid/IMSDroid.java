@@ -23,12 +23,13 @@ import org.doubango.ngn.NgnApplication;
 
 import android.util.Log;
 
-public class IMSDroid extends NgnApplication{
-	private final static String TAG = IMSDroid.class.getCanonicalName();
+public class IMSDroid //extends NgnApplication
+{
+	// private final static String TAG = IMSDroid.class.getCanonicalName();
 	
-	public IMSDroid() {
-		super();
-		Log.d(TAG,"IMSDroid()");
+	// public IMSDroid() {
+	// 	super();
+	// 	Log.d(TAG,"IMSDroid()");
 
-    }
+    // }
 }

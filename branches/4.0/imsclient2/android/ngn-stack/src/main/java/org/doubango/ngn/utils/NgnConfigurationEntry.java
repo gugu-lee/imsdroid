@@ -162,19 +162,19 @@ public class NgnConfigurationEntry {
 	public static final boolean DEFAULT_GENERAL_SEND_DEVICE_INFO = false;
 	
 	//	Identity
-	public static final String DEFAULT_IDENTITY_DISPLAY_NAME = "John Doe";
-	public static final String DEFAULT_IDENTITY_IMPU = "sip:johndoe@doubango.org";
-	public static final String DEFAULT_IDENTITY_IMPI = "johndoe";
-	public static final String DEFAULT_IDENTITY_PASSWORD = null;
+	public static final String DEFAULT_IDENTITY_DISPLAY_NAME = "Bob";
+	public static final String DEFAULT_IDENTITY_IMPU = "sip:bob@freeims.net";
+	public static final String DEFAULT_IDENTITY_IMPI = "bob@freeims.net";
+	public static final String DEFAULT_IDENTITY_PASSWORD = "bob";
 	
 	// Network
 	public static final int DEFAULT_NETWORK_REGISTRATION_TIMEOUT = 1700;
-	public static final String DEFAULT_NETWORK_REALM = "doubango.org";
+	public static final String DEFAULT_NETWORK_REALM = "freeims.net";
 	public static final boolean DEFAULT_NETWORK_USE_WIFI = true;
 	public static final boolean DEFAULT_NETWORK_USE_3G = false;
 	public static final String DEFAULT_NETWORK_PCSCF_DISCOVERY = "None";
-	public static final String DEFAULT_NETWORK_PCSCF_HOST = "127.0.0.1";
-	public static final int DEFAULT_NETWORK_PCSCF_PORT = 5060;
+	public static final String DEFAULT_NETWORK_PCSCF_HOST = "192.168.10.7";
+	public static final int DEFAULT_NETWORK_PCSCF_PORT = 4060;
 	public static final boolean DEFAULT_NETWORK_USE_SIGCOMP = false;
 	public static final String DEFAULT_NETWORK_TRANSPORT = "udp";
 	public static final String DEFAULT_NETWORK_IP_VERSION = "ipv4";
@@ -236,7 +236,7 @@ public class NgnConfigurationEntry {
 	// XCAP
 	public static final boolean DEFAULT_XCAP_ENABLED = false;
 	public static final String DEFAULT_XCAP_ROOT = "http://doubango.org:8080/services";
-	public static final String DEFAULT_XCAP_USERNAME = "sip:johndoe@doubango.org";
+	public static final String DEFAULT_XCAP_USERNAME = "sip:bob@freeims.net";
 	public static final String DEFAULT_XCAP_PASSWORD = null;
 	
 	// RCS (Rich Communication Suite)

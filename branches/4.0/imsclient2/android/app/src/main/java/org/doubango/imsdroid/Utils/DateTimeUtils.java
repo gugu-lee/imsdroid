@@ -23,6 +23,8 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import org.doubango.imsdroid.IMSDroid;
+
+import com.imsclient2.MainApplication;
 import com.imsclient2.R;
 import org.doubango.ngn.utils.NgnDateTimeUtils;
 
@@ -37,14 +39,14 @@ public class DateTimeUtils extends NgnDateTimeUtils{
 	
 	public static String getTodayName(){
 		if(sTodayName == null){
-			sTodayName = IMSDroid.getContext().getResources().getString(R.string.day_today);
+			sTodayName = MainApplication.getContext().getResources().getString(R.string.day_today);
 		}
 		return sTodayName;
 	}
 	
 	public static String getYesterdayName(){
 		if(sYesterdayName == null){
-			sYesterdayName = IMSDroid.getContext().getResources().getString(R.string.day_yesterday);
+			sYesterdayName = MainApplication.getContext().getResources().getString(R.string.day_yesterday);
 		}
 		return sYesterdayName;
 	}

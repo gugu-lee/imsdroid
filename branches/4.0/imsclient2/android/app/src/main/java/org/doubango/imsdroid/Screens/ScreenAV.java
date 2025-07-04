@@ -29,6 +29,8 @@ import org.doubango.imsdroid.CustomDialog;
 import org.doubango.imsdroid.Engine;
 import org.doubango.imsdroid.IMSDroid;
 import org.doubango.imsdroid.Main;
+
+import com.imsclient2.MainApplication;
 import com.imsclient2.R;
 import org.doubango.imsdroid.Services.IScreenService;
 import org.doubango.imsdroid.Utils.DialerUtils;
@@ -265,7 +267,7 @@ public class ScreenAV extends BaseScreen{
 		super.onStart();
 		Log.d(TAG,"onStart()");
 		
-		final KeyguardManager keyguardManager = IMSDroid.getKeyguardManager();
+		final KeyguardManager keyguardManager = MainApplication.getKeyguardManager();
 		if(keyguardManager != null){
 			if(mKeyguardLock == null){
 				mKeyguardLock = keyguardManager.newKeyguardLock(ScreenAV.TAG);
@@ -275,7 +277,7 @@ public class ScreenAV extends BaseScreen{
 			}
 		}
 		
-		final PowerManager powerManager = IMSDroid.getPowerManager();
+		final PowerManager powerManager = MainApplication.getPowerManager();
 		if(powerManager != null && mWakeLock == null){
 			mWakeLock = powerManager.newWakeLock(PowerManager.ON_AFTER_RELEASE | PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, TAG);
 			if(mWakeLock != null){
@@ -283,7 +285,7 @@ public class ScreenAV extends BaseScreen{
 			}
 		}
 		
-		if(mProxSensor == null && !IMSDroid.isBuggyProximitySensor()){
+		if(mProxSensor == null && !MainApplication.isBuggyProximitySensor()){
 			mProxSensor = new MyProxSensor(this);
 		}
 	}
@@ -1218,7 +1220,7 @@ public class ScreenAV extends BaseScreen{
 		
 		MyProxSensor(ScreenAV avScreen){
 			mAVScreen = avScreen;
-			mSensorManager = IMSDroid.getSensorManager();
+			mSensorManager = MainApplication.getSensorManager();
 		}
 		
 		void start(){

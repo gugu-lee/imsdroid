@@ -43,6 +43,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
+
+import com.imsclient2.MainApplication;
 import com.imsclient2.R;
 public class NativeService extends NgnNativeService {
 	private final static String TAG = NativeService.class.getCanonicalName();
@@ -50,7 +52,7 @@ public class NativeService extends NgnNativeService {
 	
 	private PowerManager.WakeLock mWakeLock;
 	private BroadcastReceiver mBroadcastReceiver;
-	private Engine mEngine;
+	private final Engine mEngine;
 	
 	public NativeService(){
 		super();
@@ -71,8 +73,8 @@ public class NativeService extends NgnNativeService {
 	}
 	
 	@Override
-	public void onStart(Intent intent, int startId) {
-		super.onStart(intent, startId);
+	public int onStartCommand(Intent intent, int flags,int startId) {
+		int retValue=super.onStartCommand(intent, flags,startId);
 		Log.d(TAG, "onStart()");
 		
 		// register()
@@ -81,7 +83,8 @@ public class NativeService extends NgnNativeService {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				final String action = intent.getAction();
-				
+				Log.i(TAG,action);
+
 				// Registration Events
 				if(NgnRegistrationEventArgs.ACTION_REGISTRATION_EVENT.equals(action)){
 					NgnRegistrationEventArgs args = intent.getParcelableExtra(NgnEventArgs.EXTRA_EMBEDDED);
@@ -101,11 +104,11 @@ public class NativeService extends NgnNativeService {
 							final boolean bTrying = (type == NgnRegistrationEventTypes.REGISTRATION_INPROGRESS || type == NgnRegistrationEventTypes.UNREGISTRATION_INPROGRESS);
 							if(mEngine.getSipService().isRegistered()){
 								mEngine.showAppNotif(bTrying ?R.drawable.bullet_ball_glass_grey_16 : R.drawable.bullet_ball_glass_green_16, null);
-								IMSDroid.acquirePowerLock();
+								MainApplication.acquirePowerLock();
 							}
 							else{
 								mEngine.showAppNotif(bTrying ?R.drawable.bullet_ball_glass_grey_16 : R.drawable.bullet_ball_glass_red_16, null);
-								IMSDroid.releasePowerLock();
+								MainApplication.releasePowerLock();
 							}
 							break;
 					}
@@ -126,11 +129,12 @@ public class NativeService extends NgnNativeService {
 								remoteParty = NgnStringUtils.nullValue();
 							}
 							remoteParty = NgnUriUtils.getUserName(remoteParty);
-							NgnHistorySMSEvent event = new NgnHistorySMSEvent(remoteParty, StatusType.Incoming);
-							event.setContent(new String(args.getPayload()));
-							event.setStartTime(NgnDateTimeUtils.parseDate(dateString).getTime());
-							mEngine.getHistoryService().addEvent(event);
-							mEngine.showSMSNotif(R.drawable.sms_25, "New message");
+//							NgnHistorySMSEvent event = new NgnHistorySMSEvent(remoteParty, StatusType.Incoming);
+//							event.setContent(new String(args.getPayload()));
+//							event.setStartTime(NgnDateTimeUtils.parseDate(dateString).getTime());
+//							mEngine.getHistoryService().addEvent(event);
+//							mEngine.showSMSNotif(R.drawable.sms_25, "New message");
+							Log.i(TAG,new String(args.getPayload()));
 							break;
 					}
 				}
@@ -277,6 +281,7 @@ public class NativeService extends NgnNativeService {
 		final Intent i = new Intent(ACTION_STATE_EVENT);
 		i.putExtra("started", true);
 		sendBroadcast(i);
+		return retValue;
 	}
 	
 	@Override

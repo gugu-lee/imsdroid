@@ -474,10 +474,11 @@ public class NgnNetworkService  extends NgnBaseService implements INgnNetworkSer
 			connected = true;
 		}
 
-		if (!connected) {
-			Log.e(NgnNetworkService.TAG, "No active network");
-			return false;
-		}
+		// 在模拟器环境下，暂时关闭此判断
+//		if (!connected) {
+//			Log.e(NgnNetworkService.TAG, "No active network");
+//			return false;
+//		}
 
 		mAcquired = true;
 		return true;

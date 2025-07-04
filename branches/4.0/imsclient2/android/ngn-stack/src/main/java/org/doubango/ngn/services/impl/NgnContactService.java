@@ -97,8 +97,8 @@ public class NgnContactService  extends NgnBaseService implements INgnContactSer
 									load();
 								}
 							};
-							NgnApplication.getContext().getContentResolver().registerContentObserver(CommonDataKinds.Phone.CONTENT_URI, 
-									true, mLocalContactObserver);
+//							NgnApplication.getContext().getContentResolver().registerContentObserver(CommonDataKinds.Phone.CONTENT_URI,
+//									true, mLocalContactObserver);
 						}
 					});
 					Looper.loop();// loop() until quit() is called

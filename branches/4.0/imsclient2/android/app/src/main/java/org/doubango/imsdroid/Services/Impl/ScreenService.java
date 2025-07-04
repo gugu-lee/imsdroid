@@ -26,6 +26,8 @@ import java.util.Map;
 import org.doubango.imsdroid.Engine;
 import org.doubango.imsdroid.IMSDroid;
 import org.doubango.imsdroid.Main;
+
+import com.imsclient2.MainApplication;
 import com.imsclient2.R;
 import org.doubango.imsdroid.Screens.IBaseScreen;
 import org.doubango.imsdroid.Screens.ScreenHome;
@@ -96,7 +98,7 @@ public class ScreenService extends NgnBaseService implements IScreenService {
 
 	@Override
 	public boolean bringToFront(int action, String[]... args) {
-		Intent intent = new Intent(IMSDroid.getContext(), Main.class);
+		Intent intent = new Intent(MainApplication.getContext(), Main.class);
 		try{
 			intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP  | Intent.FLAG_ACTIVITY_NEW_TASK);
 			intent.putExtra("action", action);
@@ -106,7 +108,7 @@ public class ScreenService extends NgnBaseService implements IScreenService {
 				}
 				intent.putExtra(arg[0], arg[1]);
 			}
-			IMSDroid.getContext().startActivity(intent);
+			MainApplication.getContext().startActivity(intent);
 			return true;
 		}
 		catch (Exception e) {

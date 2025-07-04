@@ -57,11 +57,15 @@ import org.doubango.utils.AndroidUtils;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.Vibrator;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 /**
  * Next Generation Network Engine.
@@ -331,21 +335,24 @@ public class NgnEngine {
 		
 		boolean success = true;
 		
-		success &= getConfigurationService().start();
-		success &= getStorageService().start();
-		success &= getNetworkService().start();
-		success &= getHttpClientService().start();
-		success &= getHistoryService().start();
-		success &= getContactService().start();
+//		success &= getConfigurationService().start();
+//		success &= getStorageService().start();
+//		success &= getNetworkService().start();
+//		success &= getHttpClientService().start();
+//		success &= getHistoryService().start();
+//		success &= getContactService().start();
 		success &= getSipService().start();
-		success &= getSoundService().start();
+//		success &= getSoundService().start();
 		
 		if(success){
-			success &= getHistoryService().load();
-			/* success &=*/ getContactService().load();
-			
+			Log.i(TAG,"start History");
+			//success &= getHistoryService().load();
+			///* success &=*/ getContactService().load();
+			Log.i(TAG,"start NativeService");
 			NgnApplication.getContext().startService(
 					new Intent(NgnApplication.getContext(), getNativeServiceClass()));
+
+
 		}
 		else{
 			Log.e(TAG, "Failed to start services");
