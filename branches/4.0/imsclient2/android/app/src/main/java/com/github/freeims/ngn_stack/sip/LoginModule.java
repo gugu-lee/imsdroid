@@ -1,6 +1,8 @@
 package com.github.freeims.ngn_stack.sip;
 
 
+import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -13,6 +15,7 @@ import com.facebook.react.bridge.ReactMethod;
 
 import org.doubango.imsdroid.Engine;
 import org.doubango.ngn.NgnApplication;
+import org.doubango.ngn.events.NgnMessagingEventArgs;
 import org.doubango.ngn.model.NgnHistoryEvent;
 import org.doubango.ngn.services.impl.NgnSipService;
 import org.doubango.ngn.sip.NgnMessagingSession;
@@ -39,41 +42,51 @@ public class LoginModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void login(Promise promise) {
-        try {
-            engine = (Engine) Engine.getInstance();
 
-            sipService=(NgnSipService) engine.getSipService();
-            boolean ret = false;
-            if (sipService.isRegistered()){
-                Log.i("LOGINMODULE","is regiser");
-            }else{
-                //
-                Log.i("LogIN","Not Register");
-                sipService.register(reactContext);
-
-
-
-            }
-
-            final NgnMessagingSession imSession = NgnMessagingSession.createOutgoingSession(sipService.getSipStack(),
-                    "sip:alice@freeims.net");
-            if(!(ret = imSession.sendTextMessage("hello"))){
-                //e.setStatus(NgnHistoryEvent.StatusType.Failed);
-            }
-            NgnMessagingSession.releaseSession(imSession);
-        }catch (ExceptionInInitializerError e){
-            Log.e("LOGIN", "Engine initialization failed: " + e.getMessage(), e);
-            promise.reject("Engine initialization failed", e);
-            return;
+        Intent broadcastIntent = new Intent(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT);
+        broadcastIntent.putExtra("message", "Hello from Activity!");
+        // Android 12+ 需要指定 FLAG_RECEIVER_VISIBLE_TO_INSTANT_APPS（可选）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            broadcastIntent.addFlags(Intent.FLAG_RECEIVER_VISIBLE_TO_INSTANT_APPS);
         }
-        catch (Exception e) {
-            Log.e("LOGIN",e.getLocalizedMessage(),e);
-        }
+        reactContext.sendBroadcast(broadcastIntent);
 
-        // 这里可以调用你的登录逻辑
-        //Toast.makeText(reactContext, "Login called from JS", Toast.LENGTH_SHORT).show();
-        // 假设登录成功
-        promise.resolve("登录成功");
-        // 如果失败可以调用 promise.reject("错误信息");
+
+
+//
+//
+//        try {
+//            engine = (Engine) Engine.getInstance();
+//
+//            sipService=(NgnSipService) engine.getSipService();
+//            boolean ret = false;
+//            if (sipService.isRegistered()){
+//                Log.i("LOGINMODULE","is regiser");
+//            }else{
+//                //
+//                Log.i("LogIN","Not Register");
+//                sipService.register(reactContext);
+//            }
+//
+//            final NgnMessagingSession imSession = NgnMessagingSession.createOutgoingSession(sipService.getSipStack(),
+//                    "sip:alice@freeims.net");
+//            if(!(ret = imSession.sendTextMessage("hello"))){
+//                //e.setStatus(NgnHistoryEvent.StatusType.Failed);
+//            }
+//            NgnMessagingSession.releaseSession(imSession);
+//        }catch (ExceptionInInitializerError e){
+//            Log.e("LOGIN", "Engine initialization failed: " + e.getMessage(), e);
+//            promise.reject("Engine initialization failed", e);
+//            return;
+//        }
+//        catch (Exception e) {
+//            Log.e("LOGIN",e.getLocalizedMessage(),e);
+//        }
+//
+//        // 这里可以调用你的登录逻辑
+//        //Toast.makeText(reactContext, "Login called from JS", Toast.LENGTH_SHORT).show();
+//        // 假设登录成功
+//        promise.resolve("登录成功");
+//        // 如果失败可以调用 promise.reject("错误信息");
     }
 }

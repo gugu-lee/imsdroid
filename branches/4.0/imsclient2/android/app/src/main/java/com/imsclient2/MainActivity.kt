@@ -1,24 +1,25 @@
 package com.imsclient2
 
 import android.Manifest
-import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.work.OneTimeWorkRequest
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import org.doubango.imsdroid.Engine
+import org.doubango.ngn.events.NgnMessagingEventArgs
 
 
 class MainActivity : ReactActivity() {
 
     private var mEngine: Engine? = null
-
+    private var dynamicReceiver: MyDynamicReceiver? = null
     companion object {
         private const val PERMISSION_REQUEST_CODE = 100
         private val REQUIRED_PERMISSIONS = arrayOf(
@@ -54,31 +55,55 @@ class MainActivity : ReactActivity() {
 
 
         // 启动服务（适配 Android 8.0+）
-        val serviceIntent = Intent(
-            this,
-            MyBroadcastService::class.java
-        )
+//        val serviceIntent = Intent(
+//            this,
+//            MyBroadcastService::class.java
+//        )
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//            Log.i("dddddddd","fffffffffff")
+//            val request: OneTimeWorkRequest =
+//                Builder(BackupWorker::class.java).addTag("BACKUP_WORKER_TAG").build()
+//            WorkManager.getInstance(this).enqueue(request)
+//        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            startForegroundService(serviceIntent)
+//        } else {
+//            startService(serviceIntent)
+//        }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val request: OneTimeWorkRequest =
-                Builder(BackupWorker::class.java).addTag("BACKUP_WORKER_TAG").build()
-            WorkManager.getInstance(this).enqueue(request)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
-
-        checkPermissions();
+        //checkPermissions();
 
         // Sets main activity (should be done before starting services)
-        mEngine = Engine.getInstance() as Engine
-        //if (mEngine!=null){
-            mEngine?.start()
-        //}
+//        mEngine = Engine.getInstance() as Engine
+//        //if (mEngine!=null){
+//            mEngine?.start()
+//        //}
+//
+//        mEngine!!.mainActivity = this
 
-        mEngine!!.mainActivity = this
+    }
 
+    override fun onStart() {
+        super.onStart()
+        // 注册动态接收器
+        dynamicReceiver = MyDynamicReceiver()
+        val filter = IntentFilter(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.i("MainActivey----------","regiser S");
+            registerReceiver(dynamicReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            Log.i("MainActivey----------","regiser");
+            registerReceiver(dynamicReceiver, filter)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // 注销动态接收器（避免内存泄漏）
+        if (dynamicReceiver != null) {
+            unregisterReceiver(dynamicReceiver)
+        }
     }
 
     private fun checkPermissions() {

@@ -43,6 +43,11 @@
     <!-- 摄像头特性声明（可选） -->
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
+    <!-- 接收系统广播权限（如 BOOT_COMPLETED） -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Android 13+ 通知权限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
       android:name=".MainApplication"
@@ -52,9 +57,9 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
-        <service android:name=".NativeService" />
+<!--        <service android:name=".NativeService" />-->
 
-        <service android:name=".MyBroadcastService" />
+<!--        <service android:name=".MyBroadcastService" android:foregroundServiceType="shortService" />-->
 
         <!-- 静态注册的广播接收器（如需接收系统广播） -->
         <receiver

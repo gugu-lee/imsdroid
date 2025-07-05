@@ -14,6 +14,8 @@ import android.util.Log;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
+import org.doubango.ngn.events.NgnMessagingEventArgs;
+
 public class MyBroadcastService extends Service {
     private static final String TAG = "MyBroadcastService";
     private static final String CHANNEL_ID = "service_channel";
@@ -30,6 +32,7 @@ public class MyBroadcastService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
+                Log.i(TAG,action);
                 if ("com.example.MY_CUSTOM_ACTION".equals(action)) {
                     String data = intent.getStringExtra("message");
                     Log.d(TAG, "Received broadcast: " + data);
@@ -43,8 +46,8 @@ public class MyBroadcastService extends Service {
 
     private void registerReceiverWithRuntimeCheck() {
         IntentFilter filter = new IntentFilter();
-        filter.addAction("com.example.MY_CUSTOM_ACTION"); // 自定义广播
-        filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED); // 系统广播（需要 RECEIVER_EXPORTED）
+        //filter.addAction(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT); // 自定义广播
+        //filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED); // 系统广播（需要 RECEIVER_EXPORTED）
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 12+：显式指定导出行为
@@ -61,6 +64,7 @@ public class MyBroadcastService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG,"onStartCommand");
         startForeground(NOTIFICATION_ID, createNotification());
 
         // 其他逻辑（如注册广播接收器）
