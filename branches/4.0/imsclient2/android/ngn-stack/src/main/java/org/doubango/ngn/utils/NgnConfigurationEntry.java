@@ -173,7 +173,7 @@ public class NgnConfigurationEntry {
 	public static final boolean DEFAULT_NETWORK_USE_WIFI = true;
 	public static final boolean DEFAULT_NETWORK_USE_3G = false;
 	public static final String DEFAULT_NETWORK_PCSCF_DISCOVERY = "None";
-	public static final String DEFAULT_NETWORK_PCSCF_HOST = "192.168.10.7";
+	public static final String DEFAULT_NETWORK_PCSCF_HOST = "10.0.2.2";
 	public static final int DEFAULT_NETWORK_PCSCF_PORT = 4060;
 	public static final boolean DEFAULT_NETWORK_USE_SIGCOMP = false;
 	public static final String DEFAULT_NETWORK_TRANSPORT = "udp";

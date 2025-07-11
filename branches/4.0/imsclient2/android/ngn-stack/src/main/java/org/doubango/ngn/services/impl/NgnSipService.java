@@ -518,6 +518,7 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 	private void broadcastRegistrationEvent(NgnRegistrationEventArgs args) {
 		final Intent intent = new Intent(
 				NgnRegistrationEventArgs.ACTION_REGISTRATION_EVENT);
+		intent.setPackage(NgnApplication.getContext().getPackageName());
 		intent.putExtra(NgnRegistrationEventArgs.EXTRA_EMBEDDED, args);
 		NgnApplication.getContext().sendBroadcast(intent);
 	}
@@ -547,6 +548,7 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 			String remoteParty, String date) {
 		final Intent intent = new Intent(
 				NgnMessagingEventArgs.ACTION_MESSAGING_EVENT);
+		intent.setPackage(NgnApplication.getContext().getPackageName());
 		Log.d(TAG,NgnMessagingEventArgs.ACTION_MESSAGING_EVENT);
 		intent.putExtra(NgnMessagingEventArgs.EXTRA_REMOTE_PARTY, remoteParty);
 		intent.putExtra(NgnMessagingEventArgs.EXTRA_DATE, date);

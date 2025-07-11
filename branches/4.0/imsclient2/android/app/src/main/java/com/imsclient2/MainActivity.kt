@@ -1,6 +1,9 @@
 package com.imsclient2
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
@@ -29,6 +32,19 @@ class MainActivity : ReactActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     }
+    private val ACTION_CUSTOM_BROADCAST = NgnMessagingEventArgs.ACTION_MESSAGING_EVENT
+    private val EXTRA_MSG = "message"
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ACTION_CUSTOM_BROADCAST) {
+                val msg = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE)
+                Log.d("MainActivity", "收到自定义广播: $msg")
+                val embedded = intent.getSerializableExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED)
+                val msg1 = (embedded as? NgnMessagingEventArgs)?.getPayload()
+                Log.d("MainActivity", "收到短信: $msg1.")
+            }
+        }
+    }
 
     /**
      * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -51,7 +67,13 @@ class MainActivity : ReactActivity() {
         super.onCreate(savedInstanceState)
         // 你的初始化代码
 
-
+        // 注册广播接收器，兼容低版本
+        val filter = IntentFilter(ACTION_CUSTOM_BROADCAST)
+        if (Build.VERSION.SDK_INT >= 26) {
+            registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(receiver, filter)
+        }
 
 
         // 启动服务（适配 Android 8.0+）
@@ -74,28 +96,28 @@ class MainActivity : ReactActivity() {
         //checkPermissions();
 
         // Sets main activity (should be done before starting services)
-//        mEngine = Engine.getInstance() as Engine
-//        //if (mEngine!=null){
-//            mEngine?.start()
-//        //}
-//
-//        mEngine!!.mainActivity = this
+        mEngine = Engine.getInstance() as Engine
+        //if (mEngine!=null){
+            mEngine?.start()
+        //}
+
+        mEngine!!.mainActivity = this
 
     }
 
     override fun onStart() {
         super.onStart()
-        // 注册动态接收器
-        dynamicReceiver = MyDynamicReceiver()
-        val filter = IntentFilter(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Log.i("MainActivey----------","regiser S");
-            registerReceiver(dynamicReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            Log.i("MainActivey----------","regiser");
-            registerReceiver(dynamicReceiver, filter)
-        }
+//        // 注册动态接收器
+//        dynamicReceiver = MyDynamicReceiver()
+//        val filter = IntentFilter(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT)
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//            Log.i("MainActivey----------","regiser S");
+//            registerReceiver(dynamicReceiver, filter, RECEIVER_NOT_EXPORTED)
+//        } else {
+//            Log.i("MainActivey----------","regiser");
+//            registerReceiver(dynamicReceiver, filter)
+//        }
     }
 
     override fun onStop() {
