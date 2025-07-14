@@ -13,12 +13,15 @@ public class MyDynamicReceiver extends BroadcastReceiver {
     private static final String TAG = "MyDynamicReceiver";
 
     @Override
-    public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
-        Log.i(TAG,action);
-        if (NgnMessagingEventArgs.ACTION_MESSAGING_EVENT.equals(action)) {
-            String message = intent.getStringExtra("message");
-            Log.d(TAG, "收到动态广播: " + message);
+    public void onReceive( Context context,  Intent intent) {
+        if (intent.getAction().equals( NgnMessagingEventArgs.ACTION_MESSAGING_EVENT) ){
+            String msg = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE);
+            Log.d("MainActivity", "收到自定义广播: "+msg);
+            NgnMessagingEventArgs args = intent.getParcelableExtra
+                    (NgnMessagingEventArgs.EXTRA_EMBEDDED);
+
+
+            Log.d("MainActivity", "收到短信: " + new String(args.getPayload()));
         }
     }
 

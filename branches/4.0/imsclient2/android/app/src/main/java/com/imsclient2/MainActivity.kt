@@ -34,17 +34,18 @@ class MainActivity : ReactActivity() {
     }
     private val ACTION_CUSTOM_BROADCAST = NgnMessagingEventArgs.ACTION_MESSAGING_EVENT
     private val EXTRA_MSG = "message"
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_CUSTOM_BROADCAST) {
-                val msg = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE)
-                Log.d("MainActivity", "收到自定义广播: $msg")
-                val embedded = intent.getSerializableExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED)
-                val msg1 = (embedded as? NgnMessagingEventArgs)?.getPayload()
-                Log.d("MainActivity", "收到短信: $msg1.")
-            }
-        }
-    }
+    private val receiver =  MyDynamicReceiver() // 创建动态接收器实例
+//        object : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent?) {
+//            if (intent?.action == ACTION_CUSTOM_BROADCAST) {
+//                val msg = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE)
+//                Log.d("MainActivity", "收到自定义广播: $msg")
+//                val embedded = intent.getParcelableExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED,NgnMessagingEventArgs.class.java)
+//                val msg1 = (embedded as? NgnMessagingEventArgs)?.getPayload()
+//                Log.d("MainActivity", "收到短信: $msg1.")
+//            }
+//        }
+//    }
 
     /**
      * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -64,7 +65,7 @@ class MainActivity : ReactActivity() {
 //        // 你的初始化代码
 //    }
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(null)
         // 你的初始化代码
 
         // 注册广播接收器，兼容低版本

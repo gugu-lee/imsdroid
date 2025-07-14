@@ -1,6 +1,5 @@
 package com.imsclient2;
 
-import android.util.Log
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -11,6 +10,7 @@ import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
+import com.github.freeims.ngn_stack.sip.MessageDbHelper
 import org.doubango.ngn.NgnApplication
 
 
@@ -52,6 +52,7 @@ class MainApplication : NgnApplication(), ReactApplication {
             load()
         }
 
-
+        // 初始化 SQLite 数据库
+        MessageDbHelper(this).writableDatabase.close()
     }
 }

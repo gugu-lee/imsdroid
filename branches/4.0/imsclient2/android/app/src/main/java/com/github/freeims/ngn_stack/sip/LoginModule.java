@@ -39,19 +39,8 @@ public class LoginModule extends ReactContextBaseJavaModule {
     public String getName() {
         return "LoginModule";
     }
-    private String ACTION_CUSTOM_BROADCAST = "com.example.myapp.ACTION_CUSTOM_BROADCAST";
-    private String EXTRA_MSG = "msg";
     @ReactMethod
     public void login(Promise promise) {
-
-
-//        Intent intent = new Intent(ACTION_CUSTOM_BROADCAST);
-//        intent.setPackage(reactContext.getPackageName());
-//        intent.putExtra(EXTRA_MSG, "你好，广播！");
-//        reactContext.sendBroadcast(intent);
-
-
-
 
 
         try {
