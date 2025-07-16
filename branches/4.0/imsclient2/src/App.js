@@ -1,16 +1,41 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { NativeModules, Alert } from 'react-native';
 import HomeScreen from './screens/HomeScreen';
 import ChatDetailScreen from './screens/ChatDetailScreen';
 import { initializeApp } from './utils/DatabaseUtils';
 
+const { LoginModule } = NativeModules;
 const Stack = createStackNavigator();
 
 const App = () => {
   useEffect(() => {
-    // 应用启动时初始化数据库
-    initializeApp();
+    // 应用启动时初始化数据库和SIP服务
+    const initializeApplication = async () => {
+      try {
+        // 初始化数据库
+        await initializeApp();
+        
+        // 初始化并注册SIP服务
+        if (LoginModule && LoginModule.initializeAndRegister) {
+          try {
+            const result = await LoginModule.initializeAndRegister();
+            console.log('SIP服务初始化成功:', result);
+          } catch (error) {
+            console.error('SIP服务初始化失败:', error);
+            // 不阻塞应用启动，只记录错误
+          }
+        } else {
+          console.warn('LoginModule not available');
+        }
+      } catch (error) {
+        console.error('应用初始化失败:', error);
+        Alert.alert('初始化错误', '应用初始化失败，部分功能可能不可用');
+      }
+    };
+
+    initializeApplication();
   }, []);
 
   return (

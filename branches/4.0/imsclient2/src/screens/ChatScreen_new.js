@@ -10,13 +10,9 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  NativeModules,
-  NativeEventEmitter,
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import databaseService from '../services/DatabaseService';
-
-const { MessageModule } = NativeModules;
 
 const ChatScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
@@ -26,49 +22,7 @@ const ChatScreen = ({ navigation }) => {
   // 初始化数据库并加载聊天列表
   useEffect(() => {
     initializeDatabase();
-    setupMessageListeners();
-    
-    return () => {
-      // 清理事件监听器
-      if (messageEventEmitter) {
-        messageEventEmitter.removeAllListeners('onNewMessage');
-        messageEventEmitter.removeAllListeners('onChatListUpdate');
-      }
-    };
   }, []);
-
-  // 设置消息事件监听器
-  const setupMessageListeners = () => {
-    if (MessageModule) {
-      // 初始化原生模块
-      MessageModule.initialize();
-      
-      // 创建事件发射器
-      const messageEventEmitter = new NativeEventEmitter(MessageModule);
-      
-      // 监听新消息事件
-      messageEventEmitter.addListener('onNewMessage', (messageData) => {
-        console.log('收到新消息:', messageData);
-        handleNewMessage(messageData);
-      });
-      
-      // 监听聊天列表更新事件
-      messageEventEmitter.addListener('onChatListUpdate', () => {
-        console.log('聊天列表需要更新');
-        loadChatList();
-      });
-    }
-  };
-
-  // 处理新消息
-  const handleNewMessage = (messageData) => {
-    const { fromUser, messageText, timestamp } = messageData;
-    
-    console.log(`收到来自 ${fromUser} 的新消息: ${messageText}`);
-    
-    // 直接刷新聊天列表，不显示弹窗提示
-    loadChatList();
-  };
 
   const initializeDatabase = async () => {
     try {

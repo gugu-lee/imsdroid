@@ -31,6 +31,7 @@ class MainApplication : NgnApplication(), ReactApplication {
                     // Packages that cannot be autolinked yet can be added manually here, for example:
                     // add(MyReactNativePackage())
                     add(com.github.freeims.ngn_stack.sip.LoginPackage())
+                    add(MessagePackage())
                 }
 
             override fun getJSMainModuleName(): String = "index"

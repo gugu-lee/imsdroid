@@ -108,17 +108,17 @@ class MainActivity : ReactActivity() {
 
     override fun onStart() {
         super.onStart()
-//        // 注册动态接收器
-//        dynamicReceiver = MyDynamicReceiver()
-//        val filter = IntentFilter(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT)
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            Log.i("MainActivey----------","regiser S");
-//            registerReceiver(dynamicReceiver, filter, RECEIVER_NOT_EXPORTED)
-//        } else {
-//            Log.i("MainActivey----------","regiser");
-//            registerReceiver(dynamicReceiver, filter)
-//        }
+        // 注册动态接收器
+        dynamicReceiver = MyDynamicReceiver()
+        val filter = IntentFilter(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Log.i("MainActivity", "注册消息接收器 S版本")
+            registerReceiver(dynamicReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            Log.i("MainActivity", "注册消息接收器")
+            registerReceiver(dynamicReceiver, filter)
+        }
     }
 
     override fun onStop() {

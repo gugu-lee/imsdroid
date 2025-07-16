@@ -10,8 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  NativeModules,
 } from 'react-native';
 import databaseService from '../services/DatabaseService';
+
+const { LoginModule } = NativeModules;
 
 const ChatDetailScreen = ({ route, navigation }) => {
   const { chatName = '张三', chatId } = route?.params || {};
@@ -59,22 +62,33 @@ const ChatDetailScreen = ({ route, navigation }) => {
   const sendMessage = async () => {
     if (message.trim() && currentChatId) {
       try {
+        const messageText = message.trim();
+        setMessage('');
+
+        // 获取接收者的SIP地址
+        const sipAddress = await databaseService.getSipAddressByName(chatName);
+        if (!sipAddress) {
+          console.warn('未找到用户的SIP地址:', chatName);
+          Alert.alert('错误', '未找到用户的SIP地址');
+          return;
+        }
+
         // 添加到数据库
-        await databaseService.addMessage(currentChatId, message.trim(), true);
+        await databaseService.addMessage(currentChatId, messageText, true);
         
         // 重新加载消息列表
         await loadMessages();
-        setMessage('');
-        
-        // 模拟对方回复
-        setTimeout(async () => {
-          try {
-            await databaseService.addMessage(currentChatId, '收到！', false);
-            await loadMessages();
-          } catch (error) {
-            console.error('添加回复消息失败:', error);
-          }
-        }, 1000);
+
+        // 通过SIP发送消息
+        try {
+          await LoginModule.sendTextMessage(sipAddress, messageText);
+          console.log('SIP消息发送成功到:', sipAddress);
+        } catch (sipError) {
+          console.error('SIP发送失败:', sipError);
+          Alert.alert('发送失败', '消息发送失败，请检查网络连接');
+          // 即使SIP发送失败，消息仍保留在本地数据库中
+        }
+
       } catch (error) {
         console.error('发送消息失败:', error);
         Alert.alert('错误', '发送消息失败');

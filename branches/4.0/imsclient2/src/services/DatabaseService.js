@@ -19,6 +19,7 @@ class DatabaseService {
       
       console.log('数据库连接成功');
       await this.createTables();
+      await this.updateDatabaseSchema();
       await this.insertSampleData();
       return this.database;
     } catch (error) {
@@ -41,6 +42,7 @@ class DatabaseService {
           avatar_url TEXT,
           is_online INTEGER DEFAULT 0,
           chat_type TEXT DEFAULT 'private',
+          sip_address TEXT,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -67,9 +69,36 @@ class DatabaseService {
     }
   }
 
+  // 更新数据库结构（用于向后兼容）
+  async updateDatabaseSchema() {
+    try {
+      // 检查sip_address字段是否存在，如果不存在则添加
+      try {
+        await this.database.executeSql(`
+          ALTER TABLE chat_list ADD COLUMN sip_address TEXT
+        `);
+        console.log('sip_address字段添加成功');
+      } catch (error) {
+        // 如果字段已存在，ALTER TABLE会失败，这是正常的
+        if (error.message && error.message.includes('duplicate column name')) {
+          console.log('sip_address字段已存在，跳过添加');
+        } else {
+          console.log('sip_address字段可能已存在或添加失败:', error.message);
+        }
+      }
+    } catch (error) {
+      console.error('更新数据库结构失败:', error);
+      throw error;
+    }
+  }
+
   // 插入示例数据
   async insertSampleData() {
     try {
+      console.log('insertSampleData 函数调用，但业务逻辑已暂时注释');
+      
+      // 暂时注释掉示例数据插入逻辑
+      /*
       // 检查是否已有数据
       const [results] = await this.database.executeSql('SELECT COUNT(*) as count FROM chat_list');
       const count = results.rows.item(0).count;
@@ -164,6 +193,7 @@ class DatabaseService {
       }
 
       console.log('示例数据插入成功');
+      */
     } catch (error) {
       console.error('插入示例数据失败:', error);
       throw error;
@@ -258,6 +288,46 @@ class DatabaseService {
     }
   }
 
+  // 根据聊天名称获取SIP地址
+  async getSipAddressByName(chatName) {
+    try {
+      // 从数据库查询SIP地址
+      const [results] = await this.database.executeSql(`
+        SELECT sip_address FROM chat_list WHERE name = ?
+      `, [chatName]);
+
+      if (results.rows.length > 0) {
+        const sipAddress = results.rows.item(0).sip_address;
+        if (sipAddress) {
+          console.log(`从数据库获取到 ${chatName} 的SIP地址: ${sipAddress}`);
+          return sipAddress;
+        }
+      }
+
+      // 如果数据库中没有找到SIP地址，返回null
+      console.log(`数据库中未找到 ${chatName} 的SIP地址`);
+      return null;
+    } catch (error) {
+      console.error('获取SIP地址失败:', error);
+      throw error;
+    }
+  }
+
+  // 更新或设置用户的SIP地址
+  async updateSipAddress(chatName, sipAddress) {
+    try {
+      await this.database.executeSql(`
+        UPDATE chat_list SET sip_address = ? WHERE name = ?
+      `, [sipAddress, chatName]);
+      
+      console.log(`已为用户 ${chatName} 设置SIP地址: ${sipAddress}`);
+      return true;
+    } catch (error) {
+      console.error('更新SIP地址失败:', error);
+      throw error;
+    }
+  }
+
   // 添加新消息
   async addMessage(chatId, messageText, isMyMessage = true) {
     try {
@@ -283,6 +353,55 @@ class DatabaseService {
       console.log('消息添加成功');
     } catch (error) {
       console.error('添加消息失败:', error);
+      throw error;
+    }
+  }
+
+  // 为接收到的消息创建或更新聊天记录（用于SIP消息接收）
+  async addOrUpdateChatForIncomingMessage(senderName, messageText, sipAddress = null) {
+    try {
+      const timestamp = new Date().toLocaleTimeString('zh-CN', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      // 检查是否已存在该用户的聊天记录
+      let chatId = await this.getChatIdByName(senderName);
+      
+      if (!chatId) {
+        // 如果不存在，创建新的聊天记录
+        const [result] = await this.database.executeSql(`
+          INSERT INTO chat_list (name, last_message, last_message_time, unread_count, chat_type, sip_address)
+          VALUES (?, ?, ?, 1, 'private', ?)
+        `, [senderName, messageText, timestamp, sipAddress]);
+        
+        chatId = result.insertId;
+        console.log(`为发送者 ${senderName} 创建新聊天记录，chatId: ${chatId}`);
+      } else {
+        // 如果存在，更新聊天记录
+        await this.database.executeSql(`
+          UPDATE chat_list 
+          SET last_message = ?, 
+              last_message_time = ?,
+              unread_count = unread_count + 1,
+              updated_at = CURRENT_TIMESTAMP,
+              sip_address = COALESCE(?, sip_address)
+          WHERE id = ?
+        `, [messageText, timestamp, sipAddress, chatId]);
+        
+        console.log(`更新发送者 ${senderName} 的聊天记录，chatId: ${chatId}`);
+      }
+
+      // 添加消息到消息表
+      await this.database.executeSql(`
+        INSERT INTO messages (chat_id, message_text, is_my_message, timestamp)
+        VALUES (?, ?, 0, ?)
+      `, [chatId, messageText, timestamp]);
+
+      console.log(`为发送者 ${senderName} 添加收到的消息: ${messageText}`);
+      return chatId;
+    } catch (error) {
+      console.error('添加收到的消息失败:', error);
       throw error;
     }
   }
@@ -323,6 +442,87 @@ class DatabaseService {
       return chatList;
     } catch (error) {
       console.error('搜索聊天失败:', error);
+      throw error;
+    }
+  }
+
+  // 删除聊天记录
+  async deleteChat(chatId) {
+    try {
+      // 开始事务
+      await this.database.executeSql('BEGIN TRANSACTION');
+      
+      // 删除该聊天的所有消息
+      await this.database.executeSql(`
+        DELETE FROM messages WHERE chat_id = ?
+      `, [chatId]);
+      
+      // 删除聊天列表项
+      await this.database.executeSql(`
+        DELETE FROM chat_list WHERE id = ?
+      `, [chatId]);
+      
+      // 提交事务
+      await this.database.executeSql('COMMIT');
+      
+      console.log(`聊天记录 ${chatId} 删除成功`);
+      return true;
+    } catch (error) {
+      // 回滚事务
+      await this.database.executeSql('ROLLBACK');
+      console.error('删除聊天记录失败:', error);
+      throw error;
+    }
+  }
+
+  // 批量删除聊天记录
+  async deleteChatsBatch(chatIds) {
+    try {
+      await this.database.executeSql('BEGIN TRANSACTION');
+      
+      for (const chatId of chatIds) {
+        // 删除消息
+        await this.database.executeSql(`
+          DELETE FROM messages WHERE chat_id = ?
+        `, [chatId]);
+        
+        // 删除聊天列表项
+        await this.database.executeSql(`
+          DELETE FROM chat_list WHERE id = ?
+        `, [chatId]);
+      }
+      
+      await this.database.executeSql('COMMIT');
+      console.log(`批量删除聊天记录成功: ${chatIds.join(', ')}`);
+      return true;
+    } catch (error) {
+      await this.database.executeSql('ROLLBACK');
+      console.error('批量删除聊天记录失败:', error);
+      throw error;
+    }
+  }
+
+  // 清空聊天消息但保留聊天列表
+  async clearChatMessages(chatId) {
+    try {
+      await this.database.executeSql(`
+        DELETE FROM messages WHERE chat_id = ?
+      `, [chatId]);
+      
+      // 更新聊天列表，清空最后消息
+      await this.database.executeSql(`
+        UPDATE chat_list 
+        SET last_message = '', 
+            last_message_time = '',
+            unread_count = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [chatId]);
+      
+      console.log(`聊天 ${chatId} 的消息清空成功`);
+      return true;
+    } catch (error) {
+      console.error('清空聊天消息失败:', error);
       throw error;
     }
   }
