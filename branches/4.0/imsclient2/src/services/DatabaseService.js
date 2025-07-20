@@ -18,10 +18,13 @@ class DatabaseService {
       });
       
       console.log('数据库连接成功');
-      await this.createTables();
-      await this.updateDatabaseSchema();
-      await this.insertSampleData();
+      
+      // 统一创建所有表和初始化数据
+      await this.createAllTables();
       await this.initializeDefaultSettings();
+      await this.insertInitialData();
+      
+      console.log('数据库初始化完成');
       return this.database;
     } catch (error) {
       console.error('数据库初始化失败:', error);
@@ -29,9 +32,11 @@ class DatabaseService {
     }
   }
 
-  // 创建数据表
-  async createTables() {
+  // 创建所有数据表
+  async createAllTables() {
     try {
+      console.log('开始创建数据表...');
+      
       // 创建聊天列表表
       await this.database.executeSql(`
         CREATE TABLE IF NOT EXISTS chat_list (
@@ -70,6 +75,8 @@ class DatabaseService {
           setting_key TEXT UNIQUE NOT NULL,
           setting_value TEXT,
           setting_type TEXT DEFAULT 'string',
+          description TEXT,
+          ui_theme TEXT DEFAULT 'light',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
@@ -82,163 +89,43 @@ class DatabaseService {
     }
   }
 
-  // 更新数据库结构（仅处理React Native端特有需求）
-  // 注意：核心表结构(chat_list, messages)的升级由ChatDatabaseHelper.java的onUpgrade方法处理
-  async updateDatabaseSchema() {
+  // 插入初始数据（仅在首次创建时）
+  async insertInitialData() {
     try {
-      // 只处理React Native端特有的表和字段
-      // 避免与ChatDatabaseHelper.java中onUpgrade方法重复
+      // 检查是否已有聊天数据
+      const [chatResults] = await this.database.executeSql('SELECT COUNT(*) as count FROM chat_list');
+      const chatCount = chatResults.rows.item(0).count;
       
-      // 添加React Native前端特有的设置字段
-      if (!(await this.columnExists('user_settings', 'description'))) {
-        await this.database.executeSql(`
-          ALTER TABLE user_settings ADD COLUMN description TEXT
-        `);
-        console.log('user_settings表description字段添加完成');
-      } else {
-        console.log('description字段已存在');
-      }
-
-      // 可以在这里添加其他前端特有的字段
-      // 例如：UI主题、缓存设置等
-      if (!(await this.columnExists('user_settings', 'ui_theme'))) {
-        await this.database.executeSql(`
-          ALTER TABLE user_settings ADD COLUMN ui_theme TEXT DEFAULT 'light'
-        `);
-        console.log('UI主题字段添加完成');
-      } else {
-        console.log('ui_theme字段已存在');
-      }
-
-      console.log('React Native数据库结构更新完成');
-    } catch (error) {
-      console.error('更新React Native数据库结构失败:', error);
-      throw error;
-    }
-  }
-
-  // 检查表中是否存在指定字段
-  async columnExists(tableName, columnName) {
-    try {
-      const [results] = await this.database.executeSql(`PRAGMA table_info(${tableName})`);
-      
-      for (let i = 0; i < results.rows.length; i++) {
-        const column = results.rows.item(i);
-        if (column.name === columnName) {
-          return true;
-        }
-      }
-      return false;
-    } catch (error) {
-      console.error('检查字段存在性失败:', error);
-      return false;
-    }
-  }
-
-  // 插入示例数据
-  async insertSampleData() {
-    try {
-      console.log('insertSampleData 函数调用，但业务逻辑已暂时注释');
-      
-      // 暂时注释掉示例数据插入逻辑
-      /*
-      // 检查是否已有数据
-      const [results] = await this.database.executeSql('SELECT COUNT(*) as count FROM chat_list');
-      const count = results.rows.item(0).count;
-      
-      if (count > 0) {
-        console.log('数据库已有数据，跳过初始化');
-        return;
-      }
-
-      // 插入示例聊天数据
-      const chatData = [
-        {
-          name: '张三',
-          lastMessage: '你好，最近怎么样？',
-          time: '15:30',
-          unreadCount: 2,
-          avatarUrl: 'https://picsum.photos/50/50?random=1',
-          isOnline: 1,
-          chatType: 'private'
-        },
-        {
-          name: '李四',
-          lastMessage: '明天见面聊吧',
-          time: '14:20',
-          unreadCount: 0,
-          avatarUrl: 'https://picsum.photos/50/50?random=2',
-          isOnline: 0,
-          chatType: 'private'
-        },
-        {
-          name: '王五',
-          lastMessage: '收到，谢谢！',
-          time: '13:45',
-          unreadCount: 1,
-          avatarUrl: 'https://picsum.photos/50/50?random=3',
-          isOnline: 1,
-          chatType: 'private'
-        },
-        {
-          name: '赵六',
-          lastMessage: '文件已发送',
-          time: '12:30',
-          unreadCount: 0,
-          avatarUrl: 'https://picsum.photos/50/50?random=4',
-          isOnline: 0,
-          chatType: 'private'
-        },
-        {
-          name: '工作群',
-          lastMessage: '钱七: 明天开会记得带资料',
-          time: '11:20',
-          unreadCount: 5,
-          avatarUrl: 'https://picsum.photos/50/50?random=5',
-          isOnline: 0,
-          chatType: 'group'
-        },
-        {
-          name: '家庭群',
-          lastMessage: '妈妈: 今天晚饭想吃什么？',
-          time: '10:15',
-          unreadCount: 3,
-          avatarUrl: 'https://picsum.photos/50/50?random=6',
-          isOnline: 0,
-          chatType: 'group'
-        }
-      ];
-
-      for (const chat of chatData) {
-        await this.database.executeSql(`
-          INSERT INTO chat_list (name, last_message, last_message_time, unread_count, avatar_url, is_online, chat_type)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [chat.name, chat.lastMessage, chat.time, chat.unreadCount, chat.avatarUrl, chat.isOnline, chat.chatType]);
-      }
-
-      // 插入示例消息数据
-      const messageData = [
-        { chatId: 1, text: '你好！', isMyMessage: 0, timestamp: '10:30' },
-        { chatId: 1, text: '嗨，你好！最近怎么样？', isMyMessage: 1, timestamp: '10:31' },
-        { chatId: 1, text: '还不错，工作有点忙', isMyMessage: 0, timestamp: '10:32' },
-        { chatId: 1, text: '理解，注意休息哦', isMyMessage: 1, timestamp: '10:33' },
+      if (chatCount === 0) {
+        console.log('插入初始聊天数据...');
         
-        { chatId: 2, text: '明天几点见面？', isMyMessage: 1, timestamp: '14:18' },
-        { chatId: 2, text: '下午2点怎么样？', isMyMessage: 0, timestamp: '14:19' },
-        { chatId: 2, text: '明天见面聊吧', isMyMessage: 0, timestamp: '14:20' },
-      ];
+        // 插入示例聊天数据
+        const chatData = [
+          {
+            name: '系统通知',
+            lastMessage: '欢迎使用IMS客户端',
+            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+            unreadCount: 1,
+            avatarUrl: 'https://picsum.photos/50/50?random=0',
+            isOnline: 0,
+            chatType: 'system',
+            sipAddress: 'system@local'
+          }
+        ];
 
-      for (const message of messageData) {
-        await this.database.executeSql(`
-          INSERT INTO messages (chat_id, message_text, is_my_message, timestamp)
-          VALUES (?, ?, ?, ?)
-        `, [message.chatId, message.text, message.isMyMessage, message.timestamp]);
+        for (const chat of chatData) {
+          await this.database.executeSql(`
+            INSERT INTO chat_list (name, last_message, last_message_time, unread_count, avatar_url, is_online, chat_type, sip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [chat.name, chat.lastMessage, chat.time, chat.unreadCount, chat.avatarUrl, chat.isOnline, chat.chatType, chat.sipAddress]);
+        }
+
+        console.log('初始聊天数据插入完成');
+      } else {
+        console.log('聊天数据已存在，跳过初始化');
       }
-
-      console.log('示例数据插入成功');
-      */
     } catch (error) {
-      console.error('插入示例数据失败:', error);
+      console.error('插入初始数据失败:', error);
       throw error;
     }
   }
@@ -676,6 +563,8 @@ class DatabaseService {
   // 初始化默认设置
   async initializeDefaultSettings() {
     try {
+      console.log('开始初始化默认设置...');
+      
       const defaultSettings = {
         // 个人信息设置
         'profile.nickname': '用户名称',
@@ -692,12 +581,12 @@ class DatabaseService {
         'account.showOnlineStatus': true,
         
         // 服务器设置
-        'server.pcscfAddress': '',
-        'server.port': '5060',
+        'server.pcscfAddress': 'pcscf.freeims.net',
+        'server.port': '4060',
         'server.useSSL': false,
         'server.registrationTimeout': '3600',
         'server.keepAliveInterval': '30',
-        'server.preset': 'custom',
+        'server.preset': 'freeims',
         
         // 应用设置
         'app.language': 'zh-CN',
@@ -715,18 +604,28 @@ class DatabaseService {
         'privacy.profilePhotoVisible': true,
       };
 
-      // 检查是否已经初始化过
-      const isInitialized = await this.getSetting('app.initialized', false);
-      if (isInitialized) {
-        console.log('默认设置已初始化，跳过');
-        return;
-      }
-
-      // 保存默认设置
-      await this.saveMultipleSettings(defaultSettings);
-      await this.saveSetting('app.initialized', true, 'boolean');
+      // 检查设置表中是否有数据
+      const [settingsResult] = await this.database.executeSql('SELECT COUNT(*) as count FROM user_settings');
+      const settingsCount = settingsResult.rows.item(0).count;
       
-      console.log('默认设置初始化完成');
+      if (settingsCount === 0) {
+        // 首次安装，保存所有默认设置
+        console.log('首次安装，保存默认设置...');
+        await this.saveMultipleSettings(defaultSettings);
+        console.log('默认设置初始化完成');
+      } else {
+        // 已有设置，只添加缺失的设置项
+        console.log('检查并补充缺失的设置项...');
+        for (const [key, defaultValue] of Object.entries(defaultSettings)) {
+          const existingValue = await this.getSetting(key, null);
+          if (existingValue === null) {
+            await this.saveSetting(key, defaultValue);
+            console.log(`添加缺失设置: ${key} = ${defaultValue}`);
+          }
+        }
+        console.log('设置项检查完成');
+      }
+      
     } catch (error) {
       console.error('初始化默认设置失败:', error);
       throw error;

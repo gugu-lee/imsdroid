@@ -50,9 +50,16 @@ public class NgnSettingsDbHelper {
     }
     
     /**
-     * 从用户设置表中获取设置值
+     * 从用户设置表中获取设置值（公开方法）
      */
-    private String getSetting(String key, String defaultValue) {
+    public String getSetting(String key, String defaultValue) {
+        return getSettingInternal(key, defaultValue);
+    }
+    
+    /**
+     * 从用户设置表中获取设置值（内部方法）
+     */
+    private String getSettingInternal(String key, String defaultValue) {
         SQLiteDatabase db = null;
         Cursor cursor = null;
         try {
@@ -97,7 +104,7 @@ public class NgnSettingsDbHelper {
      * 从sipAddress中提取域名部分
      */
     public String getRealm() {
-        String sipAddress = getSetting("account.sipAddress", "");
+        String sipAddress = getSettingInternal("account.sipAddress", "");
         if (!sipAddress.isEmpty() && sipAddress.contains("@")) {
             String domain = sipAddress.split("@")[1];
             // 确保realm格式为 sip:domain
@@ -111,7 +118,7 @@ public class NgnSettingsDbHelper {
      * 从SIP地址中提取用户名部分作为IMPI
      */
     public String getIMPI() {
-        String sipAddress = getSetting("account.sipAddress", "");
+        String sipAddress = getSettingInternal("account.sipAddress", "");
         if (!sipAddress.isEmpty()) {
             // 移除最前面的sip:前缀（如果存在）
             if (sipAddress.startsWith("sip:")) {
@@ -133,7 +140,7 @@ public class NgnSettingsDbHelper {
      * 确保SIP地址以sip:开头的标准格式
      */
     public String getIMPU() {
-        String sipAddress = getSetting("account.sipAddress", "");
+        String sipAddress = getSettingInternal("account.sipAddress", "");
         if (!sipAddress.isEmpty()) {
             // 确保SIP地址以sip:开头
             if (!sipAddress.startsWith("sip:")) {
@@ -148,14 +155,14 @@ public class NgnSettingsDbHelper {
      * 获取PCSCF主机地址
      */
     public String getPcscfHost() {
-        return getSetting("server.pcscfAddress", "pcscf.freeims.net");
+        return getSettingInternal("server.pcscfAddress", "pcscf.freeims.net");
     }
     
     /**
      * 获取PCSCF端口号
      */
     public int getPcscfPort() {
-        String portStr = getSetting("server.port", "5060");
+        String portStr = getSettingInternal("server.port", "5060");
         try {
             return Integer.parseInt(portStr);
         } catch (NumberFormatException e) {
@@ -168,7 +175,7 @@ public class NgnSettingsDbHelper {
      * 获取SIP密码
      */
     public String getPassword() {
-        return getSetting("account.password", "");
+        return getSettingInternal("account.password", "");
     }
     
     /**
@@ -176,7 +183,7 @@ public class NgnSettingsDbHelper {
      * 根据SSL设置返回对应的传输协议
      */
     public String getTransport() {
-        String useSSL = getSetting("server.useSSL", "false");
+        String useSSL = getSettingInternal("server.useSSL", "false");
         boolean sslEnabled = "true".equalsIgnoreCase(useSSL) || "1".equals(useSSL);
         return sslEnabled ? "tls" : "udp";
     }
@@ -186,9 +193,9 @@ public class NgnSettingsDbHelper {
      */
     public boolean hasValidSettings() {
         try {
-            String sipAddress = getSetting("account.sipAddress", "");
-            String password = getSetting("account.password", "");
-            String pcscfAddress = getSetting("server.pcscfAddress", "");
+            String sipAddress = getSettingInternal("account.sipAddress", "");
+            String password = getSettingInternal("account.password", "");
+            String pcscfAddress = getSettingInternal("server.pcscfAddress", "");
             
             // 检查SIP地址格式
             boolean validSipAddress = !sipAddress.isEmpty() && sipAddress.contains("@");
@@ -219,10 +226,10 @@ public class NgnSettingsDbHelper {
         sb.append("Database Exists: ").append(new File(getDatabasePath()).exists()).append("\n");
         sb.append("Has Valid Settings: ").append(hasValidSettings()).append("\n");
         sb.append("\n--- Account Settings ---\n");
-        sb.append("SIP Address: ").append(getSetting("account.sipAddress", "")).append("\n");
+        sb.append("SIP Address: ").append(getSettingInternal("account.sipAddress", "")).append("\n");
         sb.append("Password: ").append(!getPassword().isEmpty() ? "[SET]" : "[EMPTY]").append("\n");
-        sb.append("Auto Login: ").append(getSetting("account.autoLogin", "false")).append("\n");
-        sb.append("Remember Password: ").append(getSetting("account.rememberPassword", "false")).append("\n");
+        sb.append("Auto Login: ").append(getSettingInternal("account.autoLogin", "false")).append("\n");
+        sb.append("Remember Password: ").append(getSettingInternal("account.rememberPassword", "false")).append("\n");
         sb.append("\n--- Derived SIP Values ---\n");
         sb.append("Realm: ").append(getRealm()).append("\n");
         sb.append("IMPI: ").append(getIMPI()).append("\n");
@@ -230,11 +237,11 @@ public class NgnSettingsDbHelper {
         sb.append("\n--- Server Settings ---\n");
         sb.append("PCSCF Host: ").append(getPcscfHost()).append("\n");
         sb.append("PCSCF Port: ").append(getPcscfPort()).append("\n");
-        sb.append("Use SSL: ").append(getSetting("server.useSSL", "false")).append("\n");
+        sb.append("Use SSL: ").append(getSettingInternal("server.useSSL", "false")).append("\n");
         sb.append("Transport: ").append(getTransport()).append("\n");
-        sb.append("Registration Timeout: ").append(getSetting("server.registrationTimeout", "3600")).append("\n");
-        sb.append("Keep-Alive Interval: ").append(getSetting("server.keepAliveInterval", "30")).append("\n");
-        sb.append("Preset: ").append(getSetting("server.preset", "custom")).append("\n");
+        sb.append("Registration Timeout: ").append(getSettingInternal("server.registrationTimeout", "3600")).append("\n");
+        sb.append("Keep-Alive Interval: ").append(getSettingInternal("server.keepAliveInterval", "30")).append("\n");
+        sb.append("Preset: ").append(getSettingInternal("server.preset", "custom")).append("\n");
         return sb.toString();
     }
     
@@ -243,7 +250,7 @@ public class NgnSettingsDbHelper {
      */
     public boolean validateSettingsFormat() {
         try {
-            String sipAddress = getSetting("account.sipAddress", "");
+            String sipAddress = getSettingInternal("account.sipAddress", "");
             
             // 验证SIP地址格式
             if (!sipAddress.isEmpty()) {
@@ -261,7 +268,7 @@ public class NgnSettingsDbHelper {
             }
             
             // 验证端口号格式
-            String port = getSetting("server.port", "5060");
+            String port = getSettingInternal("server.port", "5060");
             try {
                 int portNum = Integer.parseInt(port);
                 if (portNum <= 0 || portNum > 65535) {

@@ -1,17 +1,20 @@
 import databaseService from '../services/DatabaseService';
-import settingsService from '../services/SettingsService';
 
 /**
  * 应用启动时初始化数据库
+ * 包含表创建、默认设置初始化等
  */
 export const initializeApp = async () => {
   try {
-    console.log('开始初始化应用...');
+    console.log('开始初始化应用数据库...');
+    
+    // 初始化数据库（包含表创建、默认设置、初始数据）
     await databaseService.initDB();
-    console.log('应用初始化完成');
+    
+    console.log('✅ 应用数据库初始化完成');
     return true;
   } catch (error) {
-    console.error('应用初始化失败:', error);
+    console.error('❌ 应用数据库初始化失败:', error);
     return false;
   }
 };

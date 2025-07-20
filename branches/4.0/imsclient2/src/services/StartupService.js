@@ -1,5 +1,6 @@
 import { Alert } from 'react-native';
-import { SettingsService } from './SettingsService';
+import SettingsService from './SettingsService';
+import ConfigValidationService from './ConfigValidationService';
 import { NativeModules } from 'react-native';
 
 const { LoginModule, SettingsDbModule } = NativeModules;
@@ -68,15 +69,16 @@ class StartupService {
     try {
       console.log('开始自动SIP注册...');
       
-      // 首先验证配置
-      const validation = await this.validateSipConfiguration();
+      // 使用新的配置验证服务
+      const configCheck = await ConfigValidationService.checkBasicConfig();
       
-      if (!validation.isValid) {
-        console.log('SIP配置不完整:', validation);
+      if (!configCheck.isComplete) {
+        console.log('SIP配置不完整:', configCheck.missingFields);
         return {
           success: false,
           reason: 'incomplete_config',
-          validation
+          message: `配置不完整: ${configCheck.missingFields.join(', ')}`,
+          validation: configCheck
         };
       }
 
@@ -95,7 +97,7 @@ class StartupService {
             success: false,
             reason: 'registration_failed',
             message: result.message || 'SIP注册失败',
-            validation
+            validation: configCheck
           };
         }
       } else {

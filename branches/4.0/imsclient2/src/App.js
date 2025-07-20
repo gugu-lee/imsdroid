@@ -6,16 +6,18 @@ import HomeScreen from './screens/HomeScreen';
 import ChatDetailScreen from './screens/ChatDetailScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ProfileSettingsScreen from './screens/ProfileSettingsScreen';
-import ServerSettingsScreen from './screens/ServerSettingsScreen';
+import BasicConfigScreen from './screens/BasicConfigScreen';
+import AdvancedSettingsScreen from './screens/AdvancedSettingsScreen';
 import AboutSettingsScreen from './screens/AboutSettingsScreen';
 import AppSettingsScreen from './screens/AppSettingsScreen';
 import PrivacySettingsScreen from './screens/PrivacySettingsScreen';
-import SipSettingsScreen from './screens/SipSettingsScreen';
+import LoginScreen from './screens/LoginScreen';
 import DebugScreen from './screens/DebugScreen';
 import SipTestScreen from './screens/SipTestScreen';
 import StartupSplashScreen from './components/StartupSplashScreen';
 import { initializeApp } from './utils/DatabaseUtils';
 import SettingsService from './services/SettingsService';
+import ConfigValidationService from './services/ConfigValidationService';
 import { StartupService } from './services/StartupService';
 
 const { LoginModule } = NativeModules;
@@ -23,14 +25,14 @@ const Stack = createStackNavigator();
 
 const App = () => {
   const navigationRef = useRef();
-  const [startupStatus, setStartupStatus] = useState(null);
-  const [showStartupSplash, setShowStartupSplash] = useState(false);
+  const [initialRoute, setInitialRoute] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     // 设置导航引用给StartupService
     StartupService.setNavigationRef(navigationRef);
     
-    // 应用启动时初始化数据库和SIP服务
+    // 应用启动时初始化
     const initializeApplication = async () => {
       try {
         console.log('🚀 应用启动初始化开始...');
@@ -39,108 +41,61 @@ const App = () => {
         await initializeApp();
         console.log('✅ 数据库初始化完成');
         
-        // 检查是否启用自动登录
-        const autoLogin = await SettingsService.getSetting('account.autoLogin', false);
+        // 检查配置状态
+        const configStatus = await ConfigValidationService.getStartupConfigStatus();
+        console.log('📋 配置检查结果:', configStatus);
         
-        if (autoLogin) {
-          setStartupStatus({ type: 'connecting' });
-          setShowStartupSplash(true);
+        if (configStatus.shouldShowLogin) {
+          // 配置不完整或未启用自动登录，显示登录界面
+          console.log('🔑 需要显示登录界面');
+          setInitialRoute('Login');
+        } else {
+          // 配置完整且启用自动登录，尝试自动注册
+          console.log('🚀 尝试自动注册...');
           
-          // 执行启动时的SIP注册检查
-          const result = await StartupService.attemptAutoRegistration();
-          
-          if (result.success) {
-            setStartupStatus({ 
-              type: 'success', 
-              message: result.message 
-            });
-            // 成功后自动关闭
-            setTimeout(() => {
-              setShowStartupSplash(false);
-            }, 2000);
-          } else {
-            // 根据失败原因设置不同的状态
-            switch (result.reason) {
-              case 'incomplete_config':
-                setStartupStatus({
-                  type: 'config_incomplete',
-                  message: '需要完成SIP配置',
-                  validation: result.validation
-                });
-                break;
-              case 'registration_failed':
-                setStartupStatus({
-                  type: 'connection_failed',
-                  message: result.message
-                });
-                break;
-              default:
-                setStartupStatus({
-                  type: 'connection_failed',
-                  message: result.message || 'SIP连接失败'
-                });
-                break;
+          try {
+            const result = await StartupService.attemptAutoRegistration();
+            
+            if (result.success) {
+              console.log('✅ 自动注册成功');
+              setInitialRoute('Home');
+            } else {
+              console.log('❌ 自动注册失败:', result.message);
+              // 自动注册失败，显示登录界面
+              setInitialRoute('Login');
             }
+          } catch (error) {
+            console.error('❌ 自动注册异常:', error);
+            setInitialRoute('Login');
           }
         }
         
       } catch (error) {
         console.error('❌ 应用初始化失败:', error);
-        
-        // 显示错误对话框
-        Alert.alert(
-          '初始化错误', 
-          '应用初始化失败，部分功能可能不可用。\n\n错误信息: ' + error.message,
-          [
-            {
-              text: '确定',
-              style: 'default'
-            },
-            {
-              text: '重试',
-              onPress: () => initializeApplication()
-            }
-          ]
-        );
+        // 初始化失败，显示登录界面
+        setInitialRoute('Login');
+      } finally {
+        setIsInitializing(false);
       }
     };
 
     initializeApplication();
   }, []);
 
-  const handleStartupNavigation = (action) => {
-    switch (action) {
-      case 'account':
-        navigationRef.current?.navigate('SipSettings');
-        break;
-      case 'server':
-        navigationRef.current?.navigate('ServerSettings');
-        break;
-      case 'settings':
-        navigationRef.current?.navigate('Settings');
-        break;
-      case 'retry':
-        // 重新尝试连接
-        setStartupStatus({ type: 'connecting' });
-        StartupService.attemptAutoRegistration().then(result => {
-          if (result.success) {
-            setStartupStatus({ type: 'success', message: result.message });
-            setTimeout(() => setShowStartupSplash(false), 2000);
-          } else {
-            setStartupStatus({
-              type: 'connection_failed',
-              message: result.message || 'SIP连接失败'
-            });
-          }
-        });
-        break;
-    }
-  };
+  // 启动过程中显示加载界面
+  if (isInitializing || !initialRoute) {
+    return <StartupSplashScreen visible={true} status={{ type: 'initializing', message: '应用初始化中...' }} />;
+  }
 
   return (
     <>
       <NavigationContainer ref={navigationRef}>
-        <Stack.Navigator initialRouteName="Home">
+        <Stack.Navigator initialRouteName={initialRoute}>
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }} 
+          />
           <Stack.Screen 
             name="Home" 
             component={HomeScreen} 
@@ -182,11 +137,26 @@ const App = () => {
             }} 
           />
           <Stack.Screen 
-            name="ServerSettings" 
-            component={ServerSettingsScreen} 
+            name="BasicConfig" 
+            component={BasicConfigScreen} 
             options={{ 
               headerShown: true,
-              title: '服务器设置',
+              title: '基本配置',
+              headerStyle: {
+                backgroundColor: '#007AFF',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+            }} 
+          />
+          <Stack.Screen 
+            name="AdvancedSettings" 
+            component={AdvancedSettingsScreen} 
+            options={{ 
+              headerShown: true,
+              title: '高级设置',
               headerStyle: {
                 backgroundColor: '#007AFF',
               },
@@ -232,21 +202,6 @@ const App = () => {
             options={{ 
               headerShown: true,
               title: '隐私设置',
-              headerStyle: {
-                backgroundColor: '#007AFF',
-              },
-              headerTintColor: '#fff',
-              headerTitleStyle: {
-                fontWeight: 'bold',
-              },
-            }} 
-          />
-          <Stack.Screen 
-            name="SipSettings" 
-            component={SipSettingsScreen} 
-            options={{ 
-              headerShown: true,
-              title: 'SIP账号设置',
               headerStyle: {
                 backgroundColor: '#007AFF',
               },

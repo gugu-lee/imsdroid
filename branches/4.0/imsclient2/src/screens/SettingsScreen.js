@@ -19,24 +19,24 @@ const SettingsScreen = ({ navigation }) => {
       screen: 'ProfileSettings'
     },
     {
-      id: 'sip',
-      title: 'SIP设置',
-      subtitle: 'SIP账号、服务器配置、连接设置',
-      icon: '📞',
-      screen: 'SipSettings'
+      id: 'basic-config',
+      title: '基本配置',
+      subtitle: 'SIP地址、密码、服务器地址、端口、自动登录',
+      icon: '⚙️',
+      screen: 'BasicConfig'
     },
     {
-      id: 'server',
-      title: '服务器配置',
-      subtitle: 'PCSCF地址、端口号',
-      icon: '🌐',
-      screen: 'ServerSettings'
+      id: 'advanced-config',
+      title: '高级设置',
+      subtitle: 'SSL、超时设置、在线状态等',
+      icon: '🔧',
+      screen: 'AdvancedSettings'
     },
     {
       id: 'app',
       title: '应用设置',
       subtitle: '主题、语言、通知等',
-      icon: '⚙️',
+      icon: '📱',
       screen: 'AppSettings'
     },
     {

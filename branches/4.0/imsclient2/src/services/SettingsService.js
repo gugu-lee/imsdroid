@@ -64,18 +64,27 @@ class SettingsService {
   }
 
   /**
-   * 保存账号设置
+   * 保存账号设置（支持部分更新）
    */
   async saveAccountSettings(account) {
-    const keyMapping = {
-      sipAddress: 'account.sipAddress',
-      password: 'account.password',
-      autoLogin: 'account.autoLogin',
-      rememberPassword: 'account.rememberPassword',
-      showOnlineStatus: 'account.showOnlineStatus'
-    };
-    
-    return await this._saveSettingsHelper(account, keyMapping, '账号设置');
+    try {
+      // 先获取现有设置，然后只更新提供的字段
+      const existingSettings = await this.getAccountSettings();
+      const updatedSettings = { ...existingSettings, ...account };
+      
+      const keyMapping = {
+        sipAddress: 'account.sipAddress',
+        password: 'account.password',
+        autoLogin: 'account.autoLogin',
+        rememberPassword: 'account.rememberPassword',
+        showOnlineStatus: 'account.showOnlineStatus'
+      };
+      
+      return await this._saveSettingsHelper(updatedSettings, keyMapping, '账号设置');
+    } catch (error) {
+      console.error('保存账号设置失败:', error);
+      throw error;
+    }
   }
 
   // ================== SIP设置 ==================
@@ -183,19 +192,28 @@ class SettingsService {
   }
 
   /**
-   * 保存服务器设置
+   * 保存服务器设置（支持部分更新）
    */
   async saveServerSettings(server) {
-    const keyMapping = {
-      pcscfAddress: 'server.pcscfAddress',
-      port: 'server.port',
-      useSSL: 'server.useSSL',
-      registrationTimeout: 'server.registrationTimeout',
-      keepAliveInterval: 'server.keepAliveInterval',
-      preset: 'server.preset'
-    };
-    
-    return await this._saveSettingsHelper(server, keyMapping, '服务器设置');
+    try {
+      // 先获取现有设置，然后只更新提供的字段
+      const existingSettings = await this.getServerSettings();
+      const updatedSettings = { ...existingSettings, ...server };
+      
+      const keyMapping = {
+        pcscfAddress: 'server.pcscfAddress',
+        port: 'server.port',
+        useSSL: 'server.useSSL',
+        registrationTimeout: 'server.registrationTimeout',
+        keepAliveInterval: 'server.keepAliveInterval',
+        preset: 'server.preset'
+      };
+      
+      return await this._saveSettingsHelper(updatedSettings, keyMapping, '服务器设置');
+    } catch (error) {
+      console.error('保存服务器设置失败:', error);
+      throw error;
+    }
   }
 
   // ================== 应用设置 ==================
@@ -298,6 +316,30 @@ class SettingsService {
       return true;
     } catch (error) {
       console.error(`${logPrefix}保存失败:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 直接保存多个设置项
+   * @param {Object} settings - 键值对对象，键为设置项名称，值为设置值
+   */
+  async saveMultipleSettings(settings) {
+    try {
+      if (!settings || typeof settings !== 'object') {
+        throw new Error('设置数据必须是一个对象');
+      }
+      
+      if (Object.keys(settings).length === 0) {
+        console.log('没有设置需要保存');
+        return true;
+      }
+      
+      await databaseService.saveMultipleSettings(settings);
+      console.log('批量设置保存成功:', Object.keys(settings));
+      return true;
+    } catch (error) {
+      console.error('批量保存设置失败:', error);
       throw error;
     }
   }

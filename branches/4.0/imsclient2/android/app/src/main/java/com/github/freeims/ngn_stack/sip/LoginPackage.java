@@ -19,6 +19,7 @@ public class LoginPackage implements ReactPackage {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new LoginModule(reactContext));
         modules.add(new SettingsDbModule(reactContext));
+        modules.add(new BasicConfigModule(reactContext));
         return modules;
     }
 
