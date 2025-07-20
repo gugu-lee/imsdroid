@@ -81,13 +81,35 @@ public class ChatDatabaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.d(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion);
         
+        // 核心表结构升级 - 负责chat_list和messages表的字段添加
+        // React Native端的DatabaseService.js只处理前端特有字段，避免重复
+        
         if (oldVersion < 2) {
-            // 添加sip_address字段
+            // 添加sip_address字段 - 先检查字段是否存在，避免重复添加
             try {
-                db.execSQL("ALTER TABLE " + TABLE_CHAT_LIST + " ADD COLUMN " + COLUMN_SIP_ADDRESS + " TEXT");
-                Log.d(TAG, "Added sip_address column to chat_list table");
+                if (!columnExists(db, TABLE_CHAT_LIST, COLUMN_SIP_ADDRESS)) {
+                    db.execSQL("ALTER TABLE " + TABLE_CHAT_LIST + " ADD COLUMN " + COLUMN_SIP_ADDRESS + " TEXT");
+                    Log.d(TAG, "Added sip_address column to chat_list table");
+                } else {
+                    Log.d(TAG, "sip_address column already exists in chat_list table");
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Error adding sip_address column: " + e.getMessage());
+            }
+        }
+        
+        // 为未来版本预留升级逻辑
+        if (oldVersion < 3) {
+            // 添加消息状态字段
+            try {
+                if (!columnExists(db, TABLE_MESSAGES, "message_status")) {
+                    db.execSQL("ALTER TABLE " + TABLE_MESSAGES + " ADD COLUMN message_status TEXT DEFAULT 'sent'");
+                    Log.d(TAG, "Added message_status column to messages table");
+                } else {
+                    Log.d(TAG, "message_status column already exists in messages table");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error adding message_status column: " + e.getMessage());
             }
         }
         
@@ -95,6 +117,27 @@ public class ChatDatabaseHelper extends SQLiteOpenHelper {
         // db.execSQL("DROP TABLE IF EXISTS " + TABLE_MESSAGES);
         // db.execSQL("DROP TABLE IF EXISTS " + TABLE_CHAT_LIST);
         // onCreate(db);
+    }
+
+    // 检查表中是否存在指定字段
+    private boolean columnExists(SQLiteDatabase db, String tableName, String columnName) {
+        boolean exists = false;
+        try {
+            Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    String name = cursor.getString(cursor.getColumnIndex("name"));
+                    if (columnName.equals(name)) {
+                        exists = true;
+                        break;
+                    }
+                }
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking column existence: " + e.getMessage());
+        }
+        return exists;
     }
 
     // 添加或更新聊天记录

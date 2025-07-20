@@ -21,6 +21,7 @@ class DatabaseService {
       await this.createTables();
       await this.updateDatabaseSchema();
       await this.insertSampleData();
+      await this.initializeDefaultSettings();
       return this.database;
     } catch (error) {
       console.error('数据库初始化失败:', error);
@@ -62,6 +63,18 @@ class DatabaseService {
         )
       `);
 
+      // 创建用户设置表
+      await this.database.executeSql(`
+        CREATE TABLE IF NOT EXISTS user_settings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          setting_key TEXT UNIQUE NOT NULL,
+          setting_value TEXT,
+          setting_type TEXT DEFAULT 'string',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       console.log('数据表创建成功');
     } catch (error) {
       console.error('创建数据表失败:', error);
@@ -69,26 +82,56 @@ class DatabaseService {
     }
   }
 
-  // 更新数据库结构（用于向后兼容）
+  // 更新数据库结构（仅处理React Native端特有需求）
+  // 注意：核心表结构(chat_list, messages)的升级由ChatDatabaseHelper.java的onUpgrade方法处理
   async updateDatabaseSchema() {
     try {
-      // 检查sip_address字段是否存在，如果不存在则添加
-      try {
+      // 只处理React Native端特有的表和字段
+      // 避免与ChatDatabaseHelper.java中onUpgrade方法重复
+      
+      // 添加React Native前端特有的设置字段
+      if (!(await this.columnExists('user_settings', 'description'))) {
         await this.database.executeSql(`
-          ALTER TABLE chat_list ADD COLUMN sip_address TEXT
+          ALTER TABLE user_settings ADD COLUMN description TEXT
         `);
-        console.log('sip_address字段添加成功');
-      } catch (error) {
-        // 如果字段已存在，ALTER TABLE会失败，这是正常的
-        if (error.message && error.message.includes('duplicate column name')) {
-          console.log('sip_address字段已存在，跳过添加');
-        } else {
-          console.log('sip_address字段可能已存在或添加失败:', error.message);
+        console.log('user_settings表description字段添加完成');
+      } else {
+        console.log('description字段已存在');
+      }
+
+      // 可以在这里添加其他前端特有的字段
+      // 例如：UI主题、缓存设置等
+      if (!(await this.columnExists('user_settings', 'ui_theme'))) {
+        await this.database.executeSql(`
+          ALTER TABLE user_settings ADD COLUMN ui_theme TEXT DEFAULT 'light'
+        `);
+        console.log('UI主题字段添加完成');
+      } else {
+        console.log('ui_theme字段已存在');
+      }
+
+      console.log('React Native数据库结构更新完成');
+    } catch (error) {
+      console.error('更新React Native数据库结构失败:', error);
+      throw error;
+    }
+  }
+
+  // 检查表中是否存在指定字段
+  async columnExists(tableName, columnName) {
+    try {
+      const [results] = await this.database.executeSql(`PRAGMA table_info(${tableName})`);
+      
+      for (let i = 0; i < results.rows.length; i++) {
+        const column = results.rows.item(i);
+        if (column.name === columnName) {
+          return true;
         }
       }
+      return false;
     } catch (error) {
-      console.error('更新数据库结构失败:', error);
-      throw error;
+      console.error('检查字段存在性失败:', error);
+      return false;
     }
   }
 
@@ -527,6 +570,288 @@ class DatabaseService {
     }
   }
 
+  // ================== 用户设置相关方法 ==================
+  
+  // 保存或更新用户设置
+  async saveSetting(key, value, type = 'string') {
+    try {
+      await this.database.executeSql(`
+        INSERT OR REPLACE INTO user_settings (setting_key, setting_value, setting_type, updated_at)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+      `, [key, JSON.stringify(value), type]);
+      
+      console.log(`设置保存成功: ${key} = ${value}`);
+      return true;
+    } catch (error) {
+      console.error('保存设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 获取用户设置
+  async getSetting(key, defaultValue = null) {
+    try {
+      const [results] = await this.database.executeSql(`
+        SELECT setting_value, setting_type FROM user_settings WHERE setting_key = ?
+      `, [key]);
+      
+      if (results.rows.length > 0) {
+        const item = results.rows.item(0);
+        try {
+          return JSON.parse(item.setting_value);
+        } catch (parseError) {
+          // 如果解析失败，返回原始字符串
+          return item.setting_value;
+        }
+      }
+      
+      return defaultValue;
+    } catch (error) {
+      console.error('获取设置失败:', error);
+      return defaultValue;
+    }
+  }
+
+  // 获取所有用户设置
+  async getAllSettings() {
+    try {
+      const [results] = await this.database.executeSql(`
+        SELECT setting_key, setting_value, setting_type FROM user_settings
+      `);
+      
+      const settings = {};
+      for (let i = 0; i < results.rows.length; i++) {
+        const item = results.rows.item(i);
+        try {
+          settings[item.setting_key] = JSON.parse(item.setting_value);
+        } catch (parseError) {
+          settings[item.setting_key] = item.setting_value;
+        }
+      }
+      
+      return settings;
+    } catch (error) {
+      console.error('获取所有设置失败:', error);
+      return {};
+    }
+  }
+
+  // 删除用户设置
+  async deleteSetting(key) {
+    try {
+      await this.database.executeSql(`
+        DELETE FROM user_settings WHERE setting_key = ?
+      `, [key]);
+      
+      console.log(`设置删除成功: ${key}`);
+      return true;
+    } catch (error) {
+      console.error('删除设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 批量保存设置
+  async saveMultipleSettings(settings) {
+    try {
+      await this.database.executeSql('BEGIN TRANSACTION');
+      
+      for (const [key, value] of Object.entries(settings)) {
+        await this.database.executeSql(`
+          INSERT OR REPLACE INTO user_settings (setting_key, setting_value, setting_type, updated_at)
+          VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        `, [key, JSON.stringify(value), typeof value]);
+      }
+      
+      await this.database.executeSql('COMMIT');
+      console.log('批量保存设置成功');
+      return true;
+    } catch (error) {
+      await this.database.executeSql('ROLLBACK');
+      console.error('批量保存设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 初始化默认设置
+  async initializeDefaultSettings() {
+    try {
+      const defaultSettings = {
+        // 个人信息设置
+        'profile.nickname': '用户名称',
+        'profile.signature': '这个人很懒，什么都没留下',
+        'profile.avatar': 'https://via.placeholder.com/60',
+        'profile.gender': '未设置',
+        'profile.region': '未设置',
+        
+        // 账号设置
+        'account.sipAddress': '',
+        'account.password': '',
+        'account.autoLogin': false,
+        'account.rememberPassword': false,
+        'account.showOnlineStatus': true,
+        
+        // 服务器设置
+        'server.pcscfAddress': '',
+        'server.port': '5060',
+        'server.useSSL': false,
+        'server.registrationTimeout': '3600',
+        'server.keepAliveInterval': '30',
+        'server.preset': 'custom',
+        
+        // 应用设置
+        'app.language': 'zh-CN',
+        'app.theme': 'light',
+        'app.fontSize': 'medium',
+        'app.autoDownloadImages': true,
+        'app.soundEnabled': true,
+        'app.vibrationEnabled': true,
+        'app.showTimestamp': true,
+        
+        // 隐私设置
+        'privacy.readReceipts': true,
+        'privacy.typingIndicator': true,
+        'privacy.lastSeenVisible': true,
+        'privacy.profilePhotoVisible': true,
+      };
+
+      // 检查是否已经初始化过
+      const isInitialized = await this.getSetting('app.initialized', false);
+      if (isInitialized) {
+        console.log('默认设置已初始化，跳过');
+        return;
+      }
+
+      // 保存默认设置
+      await this.saveMultipleSettings(defaultSettings);
+      await this.saveSetting('app.initialized', true, 'boolean');
+      
+      console.log('默认设置初始化完成');
+    } catch (error) {
+      console.error('初始化默认设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 获取调试信息
+  async getDebugInfo() {
+    try {
+      if (!this.database) {
+        return {
+          status: 'disconnected',
+          error: '数据库未连接'
+        };
+      }
+
+      const debugInfo = {
+        status: 'connected',
+        databaseName: 'ChatDB.db',
+        tables: {},
+        settings: {},
+        lastInitialized: await this.getSetting('app.initialized', false),
+      };
+
+      // 检查各个表的信息
+      const tableNames = ['chat_list', 'messages', 'user_settings'];
+      
+      for (const tableName of tableNames) {
+        try {
+          // 检查表是否存在
+          const tableExistsResult = await this.database.executeSql(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+            [tableName]
+          );
+          
+          const tableExists = tableExistsResult[0].rows.length > 0;
+          debugInfo.tables[tableName] = { exists: tableExists };
+          
+          if (tableExists) {
+            // 获取记录数
+            const countResult = await this.database.executeSql(
+              `SELECT COUNT(*) as count FROM ${tableName}`
+            );
+            debugInfo.tables[tableName].count = countResult[0].rows.item(0).count;
+            
+            // 对于user_settings表，获取所有设置键
+            if (tableName === 'user_settings') {
+              const settingsResult = await this.database.executeSql(
+                'SELECT setting_key, setting_type FROM user_settings ORDER BY setting_key'
+              );
+              
+              debugInfo.tables[tableName].keys = [];
+              for (let i = 0; i < settingsResult[0].rows.length; i++) {
+                const row = settingsResult[0].rows.item(i);
+                debugInfo.tables[tableName].keys.push({
+                  key: row.setting_key,
+                  type: row.setting_type
+                });
+              }
+            }
+          }
+        } catch (tableError) {
+          debugInfo.tables[tableName] = { 
+            exists: false, 
+            error: tableError.message 
+          };
+        }
+      }
+
+      // 获取关键设置值
+      const keySettings = [
+        'account.sipAddress',
+        'account.autoLogin',
+        'server.pcscfAddress',
+        'server.port',
+        'server.useSSL',
+        'profile.nickname',
+        'app.language',
+        'app.theme'
+      ];
+
+      for (const key of keySettings) {
+        try {
+          const value = await this.getSetting(key, null);
+          debugInfo.settings[key] = {
+            value: value,
+            hasValue: value !== null && value !== undefined && value !== ''
+          };
+        } catch (settingError) {
+          debugInfo.settings[key] = {
+            error: settingError.message
+          };
+        }
+      }
+
+      return debugInfo;
+    } catch (error) {
+      console.error('获取调试信息失败:', error);
+      return {
+        status: 'error',
+        error: error.message
+      };
+    }
+  }
+
+  // 清空所有设置
+  async clearAllSettings() {
+    try {
+      if (!this.database) {
+        throw new Error('数据库未连接');
+      }
+
+      await this.database.executeSql('DELETE FROM user_settings');
+      console.log('所有设置已清空');
+      
+      // 重新初始化默认设置
+      await this.initializeDefaultSettings();
+      
+      return true;
+    } catch (error) {
+      console.error('清空设置失败:', error);
+      throw error;
+    }
+  }
+
   // 关闭数据库连接
   async closeDB() {
     if (this.database) {
@@ -540,3 +865,4 @@ class DatabaseService {
 const databaseService = new DatabaseService();
 
 export default databaseService;
+export { databaseService as DatabaseService };

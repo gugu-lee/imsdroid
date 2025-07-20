@@ -58,6 +58,7 @@ import org.doubango.ngn.utils.NgnContentType;
 import org.doubango.ngn.utils.NgnDateTimeUtils;
 import org.doubango.ngn.utils.NgnStringUtils;
 import org.doubango.ngn.utils.NgnUriUtils;
+import org.doubango.ngn.utils.NgnSettingsDbHelper;
 import org.doubango.tinyWRAP.CallSession;
 import org.doubango.tinyWRAP.DDebugCallback;
 import org.doubango.tinyWRAP.DialogEvent;
@@ -120,6 +121,34 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 		mConfigurationService = NgnEngine.getInstance()
 				.getConfigurationService();
 		mNetworkService = NgnEngine.getInstance().getNetworkService();
+	}
+
+	/**
+	 * 从IMPU (SIP地址)中提取IMPI
+	 * 例如: "sip:user@domain.com" -> "user"
+	 */
+	private String extractIMPIFromIMPU(String impu) {
+		if (impu == null || impu.isEmpty()) {
+			return "user";
+		}
+		
+		try {
+			// 移除sip:前缀
+			String address = impu;
+			if (address.startsWith("sip:")) {
+				address = address.substring(4);
+			}
+			
+			// 提取@之前的用户名部分
+			if (address.contains("@")) {
+				return address.split("@")[0];
+			}
+			
+			return address;
+		} catch (Exception e) {
+			Log.w(TAG, "Failed to extract IMPI from IMPU: " + impu, e);
+			return "user";
+		}
 	}
 
 	@Override
@@ -241,15 +270,44 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 	@Override
 	public boolean register(Context context) {
 		Log.d(TAG, "register()");
-		mPreferences.setRealm(mConfigurationService.getString(
-				NgnConfigurationEntry.NETWORK_REALM,
-				NgnConfigurationEntry.DEFAULT_NETWORK_REALM));
-		mPreferences.setIMPI(mConfigurationService.getString(
-				NgnConfigurationEntry.IDENTITY_IMPI,
-				NgnConfigurationEntry.DEFAULT_IDENTITY_IMPI));
-		mPreferences.setIMPU(mConfigurationService.getString(
-				NgnConfigurationEntry.IDENTITY_IMPU,
-				NgnConfigurationEntry.DEFAULT_IDENTITY_IMPU));
+		
+		// 创建数据库帮助类实例
+		NgnSettingsDbHelper settingsHelper = new NgnSettingsDbHelper(context);
+		
+		// 首先检查数据库中是否有有效的设置
+		boolean hasValidDbSettings = settingsHelper.hasValidSettings();
+		Log.d(TAG, "Database has valid settings: " + hasValidDbSettings);
+		
+		if (hasValidDbSettings) {
+			// 从数据库读取设置
+			Log.d(TAG, "Reading SIP settings from database");
+			Log.d(TAG, settingsHelper.getDebugInfo());
+			
+			mPreferences.setRealm(settingsHelper.getRealm());
+			mPreferences.setIMPU(settingsHelper.getIMPU());
+			mPreferences.setIMPI(settingsHelper.getIMPI());
+		} else {
+			// fallback到配置文件
+			Log.d(TAG, "Using configuration file settings as fallback");
+			String realm = mConfigurationService.getString(
+					NgnConfigurationEntry.NETWORK_REALM,
+					NgnConfigurationEntry.DEFAULT_NETWORK_REALM);
+			String impu = mConfigurationService.getString(
+					NgnConfigurationEntry.IDENTITY_IMPU,
+					NgnConfigurationEntry.DEFAULT_IDENTITY_IMPU);
+			String impi = mConfigurationService.getString(
+					NgnConfigurationEntry.IDENTITY_IMPI,
+					NgnConfigurationEntry.DEFAULT_IDENTITY_IMPI);
+			
+			// 如果IMPI为空或默认值，尝试从IMPU中提取
+			if (impi == null || impi.isEmpty() || impi.equals(NgnConfigurationEntry.DEFAULT_IDENTITY_IMPI)) {
+				impi = extractIMPIFromIMPU(impu);
+			}
+			
+			mPreferences.setRealm(realm);
+			mPreferences.setIMPU(impu);
+			mPreferences.setIMPI(impi);
+		}
 
 		Log.d(TAG, String.format("realm='%s', impu='%s', impi='%s'",
 				mPreferences.getRealm(), mPreferences.getIMPU(),
@@ -278,9 +336,23 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 		}
 
 		// set the Password
-		mSipStack.setPassword(mConfigurationService.getString(
-				NgnConfigurationEntry.IDENTITY_PASSWORD,
-				NgnConfigurationEntry.DEFAULT_IDENTITY_PASSWORD));
+		if (hasValidDbSettings) {
+			// 从数据库读取密码
+			String dbPassword = settingsHelper.getPassword();
+			if (!dbPassword.isEmpty()) {
+				mSipStack.setPassword(dbPassword);
+				Log.d(TAG, "Using password from database");
+			} else {
+				mSipStack.setPassword(mConfigurationService.getString(
+						NgnConfigurationEntry.IDENTITY_PASSWORD,
+						NgnConfigurationEntry.DEFAULT_IDENTITY_PASSWORD));
+				Log.d(TAG, "Using password from configuration (database password is empty)");
+			}
+		} else {
+			mSipStack.setPassword(mConfigurationService.getString(
+					NgnConfigurationEntry.IDENTITY_PASSWORD,
+					NgnConfigurationEntry.DEFAULT_IDENTITY_PASSWORD));
+		}
 		// Set AMF
 		mSipStack.setAMF(mConfigurationService.getString(
 				NgnConfigurationEntry.SECURITY_IMSAKA_AMF,
@@ -327,14 +399,25 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 		}
 
 		// Set Proxy-CSCF
-		mPreferences.setPcscfHost(mConfigurationService.getString(
-				NgnConfigurationEntry.NETWORK_PCSCF_HOST, NgnConfigurationEntry.DEFAULT_NETWORK_PCSCF_HOST)); // null will trigger DNS NAPTR+SRV
-		mPreferences.setPcscfPort(mConfigurationService.getInt(
-				NgnConfigurationEntry.NETWORK_PCSCF_PORT,
-				NgnConfigurationEntry.DEFAULT_NETWORK_PCSCF_PORT));
-		mPreferences.setTransport(mConfigurationService.getString(
-				NgnConfigurationEntry.NETWORK_TRANSPORT,
-				NgnConfigurationEntry.DEFAULT_NETWORK_TRANSPORT));
+		if (hasValidDbSettings) {
+			// 从数据库读取PCSCF设置
+			mPreferences.setPcscfHost(settingsHelper.getPcscfHost());
+			mPreferences.setPcscfPort(settingsHelper.getPcscfPort());
+			mPreferences.setTransport(settingsHelper.getTransport());
+			Log.d(TAG, "Using PCSCF settings from database");
+		} else {
+			// fallback到配置文件
+			mPreferences.setPcscfHost(mConfigurationService.getString(
+					NgnConfigurationEntry.NETWORK_PCSCF_HOST, 
+					NgnConfigurationEntry.DEFAULT_NETWORK_PCSCF_HOST));
+			mPreferences.setPcscfPort(mConfigurationService.getInt(
+					NgnConfigurationEntry.NETWORK_PCSCF_PORT,
+					NgnConfigurationEntry.DEFAULT_NETWORK_PCSCF_PORT));
+			mPreferences.setTransport(mConfigurationService.getString(
+					NgnConfigurationEntry.NETWORK_TRANSPORT,
+					NgnConfigurationEntry.DEFAULT_NETWORK_TRANSPORT));
+		}
+		
 		mPreferences.setIPVersion(mConfigurationService.getString(
 				NgnConfigurationEntry.NETWORK_IP_VERSION,
 				NgnConfigurationEntry.DEFAULT_NETWORK_IP_VERSION));

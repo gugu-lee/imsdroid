@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.doubango.ngn.events.NgnMessagingEventArgs;
+import com.github.freeims.ngn_stack.database.UnifiedDatabaseModule;
 
 public class MyDynamicReceiver extends BroadcastReceiver {
     private static final String TAG = "MyDynamicReceiver";
@@ -19,8 +20,8 @@ public class MyDynamicReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT)) {
             try {
-                String msg = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE);
-                Log.d(TAG, "收到自定义广播: " + msg);
+                String dateString = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE);
+                Log.d(TAG, "收到自定义广播，时间: " + dateString);
                 
                 NgnMessagingEventArgs args = intent.getParcelableExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED);
                 if (args != null) {
@@ -45,12 +46,18 @@ public class MyDynamicReceiver extends BroadcastReceiver {
                         }
                     }
                     
-                    // 获取当前时间戳
-                    String timestamp = getCurrentTimeStamp();
+                    // 获取消息时间戳
+                    String timestamp = dateString;
+                    if (timestamp == null || timestamp.isEmpty()) {
+                        // 如果没有时间戳信息，使用当前时间作为备用
+                        timestamp = getCurrentTimeStamp();
+                        Log.d(TAG, "使用当前时间作为时间戳: " + timestamp);
+                    } else {
+                        Log.d(TAG, "使用消息原始时间戳: " + timestamp);
+                    }
                     
-                    // 写入数据库，包含SIP地址
-                    ChatDatabaseHelper dbHelper = new ChatDatabaseHelper(context);
-                    long chatId = dbHelper.addOrUpdateChat(fromUser, messageText, timestamp, sipAddress);
+                    // 写入数据库，使用统一的数据库接口
+                    long chatId = UnifiedDatabaseModule.addChatFromNative(context, fromUser, messageText, timestamp, sipAddress);
                     
                     if (chatId != -1) {
                         Log.d(TAG, "消息已保存到数据库，chatId: " + chatId);

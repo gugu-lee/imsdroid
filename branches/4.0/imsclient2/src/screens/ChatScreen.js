@@ -11,7 +11,7 @@ import {
   StatusBar,
   Alert,
   NativeModules,
-  NativeEventEmitter,
+  DeviceEventEmitter,
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import databaseService from '../services/DatabaseService';
@@ -30,33 +30,33 @@ const ChatScreen = ({ navigation }) => {
     
     return () => {
       // 清理事件监听器
-      if (messageEventEmitter) {
-        messageEventEmitter.removeAllListeners('onNewMessage');
-        messageEventEmitter.removeAllListeners('onChatListUpdate');
-      }
+      DeviceEventEmitter.removeAllListeners('onNewMessage');
+      DeviceEventEmitter.removeAllListeners('onChatListUpdate');
     };
   }, []);
 
   // 设置消息事件监听器
   const setupMessageListeners = () => {
-    if (MessageModule) {
-      // 初始化原生模块
-      MessageModule.initialize();
-      
-      // 创建事件发射器
-      const messageEventEmitter = new NativeEventEmitter(MessageModule);
-      
-      // 监听新消息事件
-      messageEventEmitter.addListener('onNewMessage', (messageData) => {
-        console.log('收到新消息:', messageData);
-        handleNewMessage(messageData);
-      });
-      
-      // 监听聊天列表更新事件
-      messageEventEmitter.addListener('onChatListUpdate', () => {
-        console.log('聊天列表需要更新');
-        loadChatList();
-      });
+    try {
+      if (MessageModule) {
+        // 初始化原生模块
+        MessageModule.initialize();
+        
+        // 使用 DeviceEventEmitter 监听事件
+        DeviceEventEmitter.addListener('onNewMessage', (messageData) => {
+          console.log('收到新消息:', messageData);
+          handleNewMessage(messageData);
+        });
+        
+        DeviceEventEmitter.addListener('onChatListUpdate', () => {
+          console.log('聊天列表需要更新');
+          loadChatList();
+        });
+      } else {
+        console.warn('MessageModule 不可用');
+      }
+    } catch (error) {
+      console.error('设置消息监听器失败:', error);
     }
   };
 

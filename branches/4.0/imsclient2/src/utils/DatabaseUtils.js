@@ -1,4 +1,5 @@
 import databaseService from '../services/DatabaseService';
+import settingsService from '../services/SettingsService';
 
 /**
  * 应用启动时初始化数据库
@@ -120,6 +121,92 @@ export const importChatData = async (jsonData) => {
     return true;
   } catch (error) {
     console.error('导入数据失败:', error);
+    return false;
+  }
+};
+
+// ================== 用户设置相关工具函数 ==================
+
+/**
+ * 获取用户个人信息
+ */
+export const getUserProfile = async () => {
+  try {
+    return await settingsService.getProfileSettings();
+  } catch (error) {
+    console.error('获取用户个人信息失败:', error);
+    return null;
+  }
+};
+
+/**
+ * 更新用户个人信息
+ */
+export const updateUserProfile = async (profile) => {
+  try {
+    return await settingsService.saveProfileSettings(profile);
+  } catch (error) {
+    console.error('更新用户个人信息失败:', error);
+    return false;
+  }
+};
+
+/**
+ * 获取账号设置
+ */
+export const getAccountSettings = async () => {
+  try {
+    return await settingsService.getAccountSettings();
+  } catch (error) {
+    console.error('获取账号设置失败:', error);
+    return null;
+  }
+};
+
+/**
+ * 保存账号设置
+ */
+export const saveAccountSettings = async (account) => {
+  try {
+    return await settingsService.saveAccountSettings(account);
+  } catch (error) {
+    console.error('保存账号设置失败:', error);
+    return false;
+  }
+};
+
+/**
+ * 获取服务器设置
+ */
+export const getServerSettings = async () => {
+  try {
+    return await settingsService.getServerSettings();
+  } catch (error) {
+    console.error('获取服务器设置失败:', error);
+    return null;
+  }
+};
+
+/**
+ * 保存服务器设置
+ */
+export const saveServerSettings = async (server) => {
+  try {
+    return await settingsService.saveServerSettings(server);
+  } catch (error) {
+    console.error('保存服务器设置失败:', error);
+    return false;
+  }
+};
+
+/**
+ * 重置所有设置
+ */
+export const resetAllSettings = async () => {
+  try {
+    return await settingsService.resetAllSettings();
+  } catch (error) {
+    console.error('重置设置失败:', error);
     return false;
   }
 };

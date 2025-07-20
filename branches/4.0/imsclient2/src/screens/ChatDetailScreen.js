@@ -11,10 +11,11 @@ import {
   Platform,
   Alert,
   NativeModules,
+  DeviceEventEmitter,
 } from 'react-native';
 import databaseService from '../services/DatabaseService';
 
-const { LoginModule } = NativeModules;
+const { LoginModule, MessageModule } = NativeModules;
 
 const ChatDetailScreen = ({ route, navigation }) => {
   const { chatName = '张三', chatId } = route?.params || {};
@@ -27,7 +28,46 @@ const ChatDetailScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     loadMessages();
+    setupMessageListener();
+    
+    return () => {
+      // 清理事件监听器
+      DeviceEventEmitter.removeAllListeners('onNewMessage');
+    };
   }, []);
+
+  // 设置消息监听器
+  const setupMessageListener = () => {
+    try {
+      if (MessageModule) {
+        // 使用 DeviceEventEmitter 监听事件
+        DeviceEventEmitter.addListener('onNewMessage', (messageData) => {
+          const { fromUser, messageText, timestamp } = messageData;
+          
+          // 检查新消息是否来自当前聊天对象
+          if (fromUser === chatName) {
+            console.log(`收到来自 ${fromUser} 的新消息，刷新聊天界面`);
+            
+            // 创建新消息对象
+            const newMessage = {
+              id: Date.now().toString(), // 临时ID
+              text: messageText,
+              isMyMessage: false,
+              timestamp: timestamp
+            };
+            
+            // 直接添加到消息列表，避免重新加载
+            setMessages(prevMessages => [...prevMessages, newMessage]);
+            
+            // 也可以选择重新加载以获取正确的数据库ID
+            // loadMessages();
+          }
+        });
+      }
+    } catch (error) {
+      console.error('设置消息监听器失败:', error);
+    }
+  };
 
   const loadMessages = async () => {
     try {

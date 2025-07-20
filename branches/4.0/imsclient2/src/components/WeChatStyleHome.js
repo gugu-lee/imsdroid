@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ChatScreen from '../screens/ChatScreen';
+import settingsService from '../services/SettingsService';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,14 +28,67 @@ const DiscoverScreen = () => (
 );
 
 // 我的页面组件
-const ProfileScreen = () => (
-  <SafeAreaView style={styles.screenContainer}>
-    <Text style={styles.header}>我</Text>
-    <View style={styles.content}>
-      <Text style={styles.contentText}>这里是个人信息页面</Text>
-    </View>
-  </SafeAreaView>
-);
+const ProfileScreen = ({ navigation }) => {
+  const [userProfile, setUserProfile] = useState({
+    nickname: '用户名称',
+    signature: '个性签名',
+    avatar: 'https://via.placeholder.com/60'
+  });
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const profile = await settingsService.getProfileSettings();
+      setUserProfile({
+        nickname: profile.nickname,
+        signature: profile.signature,
+        avatar: profile.avatar
+      });
+    } catch (error) {
+      console.error('加载用户信息失败:', error);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.screenContainer}>
+      <Text style={styles.header}>我</Text>
+      <View style={styles.content}>
+        {/* 用户信息区域 */}
+        <TouchableOpacity 
+          style={styles.userInfo}
+          onPress={() => navigation.navigate('ProfileSettings')}
+        >
+          <Image 
+            source={{ uri: userProfile.avatar }} 
+            style={styles.avatar}
+          />
+          <View style={styles.userDetails}>
+            <Text style={styles.userName}>{userProfile.nickname}</Text>
+            <Text style={styles.userSignature}>{userProfile.signature}</Text>
+          </View>
+          <Icon name="chevron-right" size={24} color="#999" />
+        </TouchableOpacity>
+
+        {/* 功能菜单 */}
+        <View style={styles.menuSection}>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <View style={styles.menuIconContainer}>
+              <Icon name="settings" size={24} color="#007AFF" />
+            </View>
+            <Text style={styles.menuText}>设置</Text>
+            <Icon name="chevron-right" size={20} color="#999" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
 
 const WeChatStyleHome = ({ navigation }) => {
   return (
@@ -100,14 +154,80 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
   },
   contentText: {
     fontSize: 16,
     color: '#666666',
     textAlign: 'center',
+  },
+  // 用户信息样式
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
+  },
+  userDetails: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 5,
+  },
+  userSignature: {
+    fontSize: 14,
+    color: '#666',
+  },
+  // 菜单样式
+  menuSection: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  menuIconContainer: {
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  menuText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000',
   },
 });
 
