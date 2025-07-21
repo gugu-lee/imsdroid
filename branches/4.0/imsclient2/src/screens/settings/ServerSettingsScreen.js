@@ -10,7 +10,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import settingsService from '../services/SettingsService';
+import settingsService from '../../services/SettingsService';
 
 const ServerSettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -67,7 +67,7 @@ const ServerSettingsScreen = ({ navigation }) => {
 
       await settingsService.saveServerSettings(serverData);
       Alert.alert('保存成功', '服务器设置已更新', [
-        { text: '确定', onPress: () => navigation.goBack() }
+        { text: '确定', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
       console.error('保存服务器设置失败:', error);
@@ -128,7 +128,7 @@ const ServerSettingsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* 头部 */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation?.goBack()}
         >
@@ -144,7 +144,7 @@ const ServerSettingsScreen = ({ navigation }) => {
         {/* PCSCF服务器设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>PCSCF服务器</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>服务器地址</Text>
             <TextInput
@@ -186,7 +186,7 @@ const ServerSettingsScreen = ({ navigation }) => {
         {/* 注册设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>注册设置</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>注册过期时间 (秒)</Text>
             <TextInput
@@ -216,15 +216,15 @@ const ServerSettingsScreen = ({ navigation }) => {
         {/* 网络设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>网络设置</Text>
-          
+
           <View style={styles.presetContainer}>
             <Text style={styles.presetTitle}>预设配置</Text>
-            
+
             <TouchableOpacity style={styles.presetItem}>
               <Text style={styles.presetName}>FreeIMS (默认)</Text>
               <Text style={styles.presetDesc}>pcscf.freeims.net:5060</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.presetItem}>
               <Text style={styles.presetName}>本地测试</Text>
               <Text style={styles.presetDesc}>192.168.1.100:5060</Text>
@@ -237,7 +237,7 @@ const ServerSettingsScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.testButton} onPress={handleTestConnection}>
             <Text style={styles.testButtonText}>测试连接</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
             <Text style={styles.resetButtonText}>重置为默认</Text>
           </TouchableOpacity>

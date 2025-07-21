@@ -10,7 +10,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import settingsService from '../services/SettingsService';
+import settingsService from '../../services/SettingsService';
 
 const ProfileSettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -61,7 +61,7 @@ const ProfileSettingsScreen = ({ navigation }) => {
 
       await settingsService.saveProfileSettings(profileData);
       Alert.alert('保存成功', '个人信息已更新', [
-        { text: '确定', onPress: () => navigation.goBack() }
+        { text: '确定', onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
       console.error('保存个人信息失败:', error);
@@ -79,19 +79,19 @@ const ProfileSettingsScreen = ({ navigation }) => {
           onPress: () => {
             // 调用相机
             console.log('拍照');
-          }
+          },
         },
         {
           text: '从相册选择',
           onPress: () => {
             // 打开相册
             console.log('从相册选择');
-          }
+          },
         },
         {
           text: '取消',
-          style: 'cancel'
-        }
+          style: 'cancel',
+        },
       ]
     );
   };
@@ -145,19 +145,19 @@ const ProfileSettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>性别</Text>
           <View style={styles.genderContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.genderOption, settings.gender === '男' && styles.genderSelected]}
               onPress={() => updateSetting('gender', '男')}
             >
               <Text style={[styles.genderText, settings.gender === '男' && styles.genderSelectedText]}>男</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.genderOption, settings.gender === '女' && styles.genderSelected]}
               onPress={() => updateSetting('gender', '女')}
             >
               <Text style={[styles.genderText, settings.gender === '女' && styles.genderSelectedText]}>女</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.genderOption, settings.gender === '保密' && styles.genderSelected]}
               onPress={() => updateSetting('gender', '保密')}
             >
@@ -178,14 +178,14 @@ const ProfileSettingsScreen = ({ navigation }) => {
         {/* 开发者选项 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>开发者选项</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.debugContainer}
             onPress={() => navigation.navigate('DebugScreen')}
           >
             <Text style={styles.debugText}>数据库调试</Text>
             <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.debugContainer}
             onPress={() => navigation.navigate('SipTestScreen')}
           >

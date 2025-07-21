@@ -45,7 +45,7 @@ const StartupSplashScreen = ({ visible, onClose, status, onNavigateToSettings })
     }
   }, [visible]);
 
-  if (!visible) return null;
+  if (!visible) {return null;}
 
   const getStatusConfig = () => {
     switch (status?.type) {
@@ -146,7 +146,7 @@ const StartupSplashScreen = ({ visible, onClose, status, onNavigateToSettings })
           <Text style={[styles.icon, { color: config.color }]}>
             {config.icon}
           </Text>
-          
+
           <Text style={styles.title}>{config.title}</Text>
           <Text style={styles.subtitle}>{config.subtitle}</Text>
 

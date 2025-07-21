@@ -11,21 +11,21 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
-import SettingsService from '../services/SettingsService';
+import SettingsService from '../../services/SettingsService';
 
 const AdvancedSettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
     // 账号高级设置
     rememberPassword: false,
     showOnlineStatus: true,
-    
+
     // 服务器高级设置
     useSSL: false,
     registrationTimeout: '3600',
     keepAliveInterval: '30',
     preset: 'custom',
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -36,17 +36,17 @@ const AdvancedSettingsScreen = ({ navigation }) => {
   const loadAdvancedSettings = async () => {
     try {
       setLoading(true);
-      
+
       const [accountSettings, serverSettings] = await Promise.all([
         SettingsService.getAccountSettings(),
-        SettingsService.getServerSettings()
+        SettingsService.getServerSettings(),
       ]);
-      
+
       setSettings({
         // 账号高级设置
         rememberPassword: accountSettings.rememberPassword || false,
         showOnlineStatus: accountSettings.showOnlineStatus !== false,
-        
+
         // 服务器高级设置
         useSSL: serverSettings.useSSL || false,
         registrationTimeout: serverSettings.registrationTimeout || '3600',
@@ -64,7 +64,7 @@ const AdvancedSettingsScreen = ({ navigation }) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // 验证设置
       if (!validateAdvancedSettings()) {
         return;
@@ -81,14 +81,14 @@ const AdvancedSettingsScreen = ({ navigation }) => {
           registrationTimeout: settings.registrationTimeout,
           keepAliveInterval: settings.keepAliveInterval,
           preset: settings.preset,
-        })
+        }),
       ]);
 
       Alert.alert('成功', '高级设置保存成功', [
         {
           text: '确定',
-          onPress: () => navigation.goBack()
-        }
+          onPress: () => navigation.goBack(),
+        },
       ]);
     } catch (error) {
       console.error('保存高级设置失败:', error);
@@ -105,14 +105,14 @@ const AdvancedSettingsScreen = ({ navigation }) => {
       Alert.alert('错误', '注册超时时间应在60-7200秒之间');
       return false;
     }
-    
+
     // 验证保活间隔
     const interval = parseInt(settings.keepAliveInterval);
     if (isNaN(interval) || interval < 10 || interval > 300) {
       Alert.alert('错误', '保活间隔应在10-300秒之间');
       return false;
     }
-    
+
     return true;
   };
 
@@ -124,7 +124,7 @@ const AdvancedSettingsScreen = ({ navigation }) => {
     const {
       keyboardType = 'default',
       suffix = '',
-      helpText = ''
+      helpText = '',
     } = options;
 
     return (
@@ -191,7 +191,7 @@ const AdvancedSettingsScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation?.goBack()}
           >
@@ -211,18 +211,18 @@ const AdvancedSettingsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        
+
         {/* 账号高级设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>账号高级设置</Text>
-          
+
           {renderSwitchItem(
             '记住密码',
             '下次启动时自动填入密码',
             settings.rememberPassword,
             (value) => updateSetting('rememberPassword', value)
           )}
-          
+
           {renderSwitchItem(
             '显示在线状态',
             '让联系人看到您的在线状态',
@@ -234,43 +234,43 @@ const AdvancedSettingsScreen = ({ navigation }) => {
         {/* 服务器高级设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>服务器高级设置</Text>
-          
+
           {renderSwitchItem(
             '使用SSL/TLS',
             '启用安全传输层协议',
             settings.useSSL,
             (value) => updateSetting('useSSL', value)
           )}
-          
+
           {renderInput(
             '注册超时时间',
             settings.registrationTimeout,
             (text) => updateSetting('registrationTimeout', text),
             '3600',
-            { 
+            {
               keyboardType: 'numeric',
               suffix: '秒',
-              helpText: '建议值: 3600秒 (1小时)，范围: 60-7200秒'
+              helpText: '建议值: 3600秒 (1小时)，范围: 60-7200秒',
             }
           )}
-          
+
           {renderInput(
             '保活间隔',
             settings.keepAliveInterval,
             (text) => updateSetting('keepAliveInterval', text),
             '30',
-            { 
+            {
               keyboardType: 'numeric',
               suffix: '秒',
-              helpText: '网络保活心跳间隔，范围: 10-300秒'
+              helpText: '网络保活心跳间隔，范围: 10-300秒',
             }
           )}
         </View>
 
         {/* 操作按钮 */}
         <View style={styles.buttonSection}>
-          <TouchableOpacity 
-            style={styles.resetButton} 
+          <TouchableOpacity
+            style={styles.resetButton}
             onPress={handleResetDefaults}
           >
             <Text style={styles.resetButtonText}>恢复默认设置</Text>
@@ -290,8 +290,8 @@ const AdvancedSettingsScreen = ({ navigation }) => {
         </View>
 
         {/* 保存按钮 */}
-        <TouchableOpacity 
-          style={styles.saveButtonMain} 
+        <TouchableOpacity
+          style={styles.saveButtonMain}
           onPress={handleSave}
           disabled={saving}
         >

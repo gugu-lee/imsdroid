@@ -9,7 +9,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import SettingsService from '../services/SettingsService';
+import SettingsService from '../../services/SettingsService';
 
 const PrivacySettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -94,14 +94,14 @@ const PrivacySettingsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        
+
         {/* 信息提示 */}
         {renderInfoSection()}
 
         {/* 消息隐私 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>消息隐私</Text>
-          
+
           {renderSwitchItem(
             '已读回执',
             '让发送者知道您已阅读他们的消息',
@@ -109,7 +109,7 @@ const PrivacySettingsScreen = ({ navigation }) => {
             (value) => updateSetting('readReceipts', value),
             !settings.readReceipts ? '关闭后您也无法看到他人的已读状态' : null
           )}
-          
+
           {renderSwitchItem(
             '正在输入指示器',
             '让对方知道您正在输入消息',
@@ -121,7 +121,7 @@ const PrivacySettingsScreen = ({ navigation }) => {
         {/* 状态隐私 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>状态隐私</Text>
-          
+
           {renderSwitchItem(
             '最后在线时间',
             '让联系人看到您最后在线的时间',
@@ -134,7 +134,7 @@ const PrivacySettingsScreen = ({ navigation }) => {
         {/* 个人资料隐私 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>个人资料隐私</Text>
-          
+
           {renderSwitchItem(
             '头像可见性',
             '允许联系人查看您的头像',
@@ -146,8 +146,8 @@ const PrivacySettingsScreen = ({ navigation }) => {
         {/* 隐私级别预设 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>快速设置</Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.presetButton}
             onPress={() => {
               setSettings({
@@ -164,8 +164,8 @@ const PrivacySettingsScreen = ({ navigation }) => {
             </View>
             <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.presetButton}
             onPress={() => {
               setSettings({
@@ -182,8 +182,8 @@ const PrivacySettingsScreen = ({ navigation }) => {
             </View>
             <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.presetButton}
             onPress={() => {
               setSettings({

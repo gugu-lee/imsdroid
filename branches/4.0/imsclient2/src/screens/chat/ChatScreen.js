@@ -10,9 +10,13 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  NativeModules,
+  DeviceEventEmitter,
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
-import databaseService from '../services/DatabaseService';
+import databaseService from '../../services/DatabaseService';
+
+const { MessageModule } = NativeModules;
 
 const ChatScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
@@ -22,7 +26,49 @@ const ChatScreen = ({ navigation }) => {
   // 初始化数据库并加载聊天列表
   useEffect(() => {
     initializeDatabase();
+    setupMessageListeners();
+
+    return () => {
+      // 清理事件监听器
+      DeviceEventEmitter.removeAllListeners('onNewMessage');
+      DeviceEventEmitter.removeAllListeners('onChatListUpdate');
+    };
   }, []);
+
+  // 设置消息事件监听器
+  const setupMessageListeners = () => {
+    try {
+      if (MessageModule) {
+        // 初始化原生模块
+        MessageModule.initialize();
+
+        // 使用 DeviceEventEmitter 监听事件
+        DeviceEventEmitter.addListener('onNewMessage', (messageData) => {
+          console.log('收到新消息:', messageData);
+          handleNewMessage(messageData);
+        });
+
+        DeviceEventEmitter.addListener('onChatListUpdate', () => {
+          console.log('聊天列表需要更新');
+          loadChatList();
+        });
+      } else {
+        console.warn('MessageModule 不可用');
+      }
+    } catch (error) {
+      console.error('设置消息监听器失败:', error);
+    }
+  };
+
+  // 处理新消息
+  const handleNewMessage = (messageData) => {
+    const { fromUser, messageText, timestamp } = messageData;
+
+    console.log(`收到来自 ${fromUser} 的新消息: ${messageText}`);
+
+    // 直接刷新聊天列表，不显示弹窗提示
+    loadChatList();
+  };
 
   const initializeDatabase = async () => {
     try {
@@ -119,19 +165,19 @@ const ChatScreen = ({ navigation }) => {
   };
 
   const renderChatItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.chatItem} 
+    <TouchableOpacity
+      style={styles.chatItem}
       activeOpacity={0.7}
-      onPress={() => navigation?.navigate('ChatDetail', { 
+      onPress={() => navigation?.navigate('ChatDetail', {
         chatName: item.name,
-        chatId: item.id 
+        chatId: item.id,
       })}
     >
       <View style={styles.avatarContainer}>
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
         {item.isOnline && <View style={styles.onlineIndicator} />}
       </View>
-      
+
       <View style={styles.chatContent}>
         <View style={styles.chatHeader}>
           <Text style={styles.chatName} numberOfLines={1}>
@@ -139,7 +185,7 @@ const ChatScreen = ({ navigation }) => {
           </Text>
           <Text style={styles.chatTime}>{item.time}</Text>
         </View>
-        
+
         <View style={styles.chatFooter}>
           <Text style={styles.lastMessage} numberOfLines={1}>
             {item.lastMessage}
@@ -180,7 +226,7 @@ const ChatScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
+
       {/* 头部 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>微信</Text>

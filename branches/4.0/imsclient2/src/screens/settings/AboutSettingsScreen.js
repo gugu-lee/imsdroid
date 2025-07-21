@@ -18,8 +18,8 @@ const AboutSettingsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* 头部 */}
-      <View style={styles.header}>
-        <TouchableOpacity 
+      {/* <View style={styles.header}>
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation?.goBack()}
         >
@@ -27,7 +27,7 @@ const AboutSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>关于</Text>
         <View style={styles.placeholder} />
-      </View>
+      </View> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* 应用信息 */}
@@ -44,16 +44,16 @@ const AboutSettingsScreen = ({ navigation }) => {
         </View>
 
         {/* 应用描述 */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>应用介绍</Text>
           <Text style={styles.description}>
             IMS Chat 是一款基于 IMS (IP Multimedia Subsystem) 技术的即时通讯应用。
             支持 SIP 协议的实时消息传输，为用户提供稳定、安全的通讯体验。
           </Text>
-        </View>
+        </View> */}
 
         {/* 功能特性 */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>主要功能</Text>
           <View style={styles.featureList}>
             <Text style={styles.featureItem}>• 基于 SIP 协议的即时消息</Text>
@@ -62,10 +62,10 @@ const AboutSettingsScreen = ({ navigation }) => {
             <Text style={styles.featureItem}>• 多设备同步</Text>
             <Text style={styles.featureItem}>• 端到端加密</Text>
           </View>
-        </View>
+        </View> */}
 
         {/* 技术信息 */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>技术信息</Text>
           <View style={styles.techInfo}>
             <View style={styles.techItem}>
@@ -85,13 +85,13 @@ const AboutSettingsScreen = ({ navigation }) => {
               <Text style={styles.techValue}>Android / iOS</Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* 链接 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>相关链接</Text>
-          
-          <TouchableOpacity 
+          {/* <Text style={styles.sectionTitle}>相关链接</Text>
+
+          <TouchableOpacity
             style={styles.linkItem}
             onPress={() => handleOpenUrl('https://github.com/example/ims-chat')}
           >
@@ -101,9 +101,9 @@ const AboutSettingsScreen = ({ navigation }) => {
               <Text style={styles.linkUrl}>github.com/example/ims-chat</Text>
             </View>
             <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity 
+          {/* <TouchableOpacity
             style={styles.linkItem}
             onPress={() => handleOpenUrl('https://example.com/privacy')}
           >
@@ -113,9 +113,9 @@ const AboutSettingsScreen = ({ navigation }) => {
               <Text style={styles.linkUrl}>example.com/privacy</Text>
             </View>
             <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity 
+          {/* <TouchableOpacity
             style={styles.linkItem}
             onPress={() => handleOpenUrl('https://example.com/terms')}
           >
@@ -125,7 +125,7 @@ const AboutSettingsScreen = ({ navigation }) => {
               <Text style={styles.linkUrl}>example.com/terms</Text>
             </View>
             <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* 开发信息 */}

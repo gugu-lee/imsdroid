@@ -7,10 +7,10 @@ import databaseService from '../services/DatabaseService';
 export const initializeApp = async () => {
   try {
     console.log('开始初始化应用数据库...');
-    
+
     // 初始化数据库（包含表创建、默认设置、初始数据）
     await databaseService.initDB();
-    
+
     console.log('✅ 应用数据库初始化完成');
     return true;
   } catch (error) {
@@ -75,7 +75,7 @@ export const exportChatData = async () => {
     const chatList = await databaseService.getChatList();
     const exportData = {
       chatList,
-      messages: {}
+      messages: {},
     };
 
     // 获取每个聊天的消息
@@ -97,11 +97,11 @@ export const exportChatData = async () => {
 export const importChatData = async (jsonData) => {
   try {
     const data = JSON.parse(jsonData);
-    
+
     // 清空现有数据
     await databaseService.database.executeSql('DELETE FROM messages');
     await databaseService.database.executeSql('DELETE FROM chat_list');
-    
+
     // 导入聊天列表
     for (const chat of data.chatList) {
       await databaseService.database.executeSql(`
@@ -109,7 +109,7 @@ export const importChatData = async (jsonData) => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `, [chat.name, chat.lastMessage, chat.time, chat.unreadCount, chat.avatar, chat.isOnline ? 1 : 0, chat.chatType]);
     }
-    
+
     // 导入消息
     for (const chatId in data.messages) {
       const messages = data.messages[chatId];
@@ -120,7 +120,7 @@ export const importChatData = async (jsonData) => {
         `, [parseInt(chatId), message.text, message.isMyMessage ? 1 : 0, message.timestamp]);
       }
     }
-    
+
     return true;
   } catch (error) {
     console.error('导入数据失败:', error);

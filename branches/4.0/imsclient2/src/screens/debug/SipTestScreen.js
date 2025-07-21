@@ -10,8 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { NativeModules } from 'react-native';
-import { DatabaseService } from '../services/DatabaseService';
-import { SettingsService } from '../services/SettingsService';
+import { DatabaseService } from '../../services/DatabaseService';
+import { SettingsService } from '../../services/SettingsService';
 
 const { LoginModule, SettingsDbModule } = NativeModules;
 
@@ -44,22 +44,22 @@ const SipTestScreen = ({ navigation }) => {
   const testDatabaseReading = async () => {
     try {
       setLoading(true);
-      
+
       // 测试Java端读取数据库
       const javaSipSettings = await SettingsDbModule.getSipSettings();
       console.log('Java端SIP设置:', javaSipSettings);
-      
+
       // 测试JavaScript端读取数据库
       const jsSipSettings = await SettingsService.getSipSettings();
       console.log('JavaScript端SIP设置:', jsSipSettings);
-      
+
       // 比较两端结果
       const comparison = {
         java: javaSipSettings,
         javascript: jsSipSettings,
-        match: JSON.stringify(javaSipSettings) === JSON.stringify(jsSipSettings)
+        match: JSON.stringify(javaSipSettings) === JSON.stringify(jsSipSettings),
       };
-      
+
       Alert.alert(
         '数据库读取测试',
         `Java端设置:\n${JSON.stringify(javaSipSettings, null, 2)}\n\n` +
@@ -67,7 +67,7 @@ const SipTestScreen = ({ navigation }) => {
         `数据一致性: ${comparison.match ? '✅ 一致' : '❌ 不一致'}`,
         [{ text: '确定' }]
       );
-      
+
     } catch (error) {
       console.error('数据库读取测试失败:', error);
       Alert.alert('测试失败', error.message);
@@ -79,12 +79,12 @@ const SipTestScreen = ({ navigation }) => {
   const saveTestSettings = async () => {
     try {
       setLoading(true);
-      
+
       // 保存到数据库
       await SettingsService.saveSipSettings(testSettings);
-      
+
       Alert.alert('保存成功', '测试设置已保存到数据库');
-      
+
     } catch (error) {
       console.error('保存测试设置失败:', error);
       Alert.alert('保存失败', error.message);
@@ -97,17 +97,17 @@ const SipTestScreen = ({ navigation }) => {
     try {
       setLoading(true);
       setSipStatus('连接中...');
-      
+
       // 先保存当前测试设置
       await saveTestSettings();
-      
+
       // 等待一下让数据库操作完成
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // 尝试SIP注册
       const result = await LoginModule.loginWithDatabaseSettings();
       console.log('SIP注册结果:', result);
-      
+
       if (result.success) {
         setSipStatus('已连接');
         Alert.alert('注册成功', result.message || 'SIP注册成功');
@@ -115,7 +115,7 @@ const SipTestScreen = ({ navigation }) => {
         setSipStatus('连接失败');
         Alert.alert('注册失败', result.message || 'SIP注册失败');
       }
-      
+
     } catch (error) {
       console.error('SIP注册测试失败:', error);
       setSipStatus('连接失败');
@@ -128,13 +128,13 @@ const SipTestScreen = ({ navigation }) => {
   const testLogout = async () => {
     try {
       setLoading(true);
-      
+
       const result = await LoginModule.logout();
       console.log('SIP注销结果:', result);
-      
+
       setSipStatus('已断开');
       Alert.alert('注销成功', 'SIP连接已断开');
-      
+
     } catch (error) {
       console.error('SIP注销失败:', error);
       Alert.alert('注销失败', error.message);
@@ -180,7 +180,7 @@ const SipTestScreen = ({ navigation }) => {
         {/* 测试设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>测试设置</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>SIP地址</Text>
             <TextInput

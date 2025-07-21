@@ -5,9 +5,9 @@ import databaseService from './DatabaseService';
  * 提供用户设置的读取、保存、更新等功能
  */
 class SettingsService {
-  
+
   // ================== 个人信息设置 ==================
-  
+
   /**
    * 获取用户个人信息
    */
@@ -36,14 +36,14 @@ class SettingsService {
       signature: 'profile.signature',
       avatar: 'profile.avatar',
       gender: 'profile.gender',
-      region: 'profile.region'
+      region: 'profile.region',
     };
-    
+
     return await this._saveSettingsHelper(profile, keyMapping, '个人信息');
   }
 
   // ================== 账号设置 ==================
-  
+
   /**
    * 获取账号设置
    */
@@ -71,15 +71,15 @@ class SettingsService {
       // 先获取现有设置，然后只更新提供的字段
       const existingSettings = await this.getAccountSettings();
       const updatedSettings = { ...existingSettings, ...account };
-      
+
       const keyMapping = {
         sipAddress: 'account.sipAddress',
         password: 'account.password',
         autoLogin: 'account.autoLogin',
         rememberPassword: 'account.rememberPassword',
-        showOnlineStatus: 'account.showOnlineStatus'
+        showOnlineStatus: 'account.showOnlineStatus',
       };
-      
+
       return await this._saveSettingsHelper(updatedSettings, keyMapping, '账号设置');
     } catch (error) {
       console.error('保存账号设置失败:', error);
@@ -88,7 +88,7 @@ class SettingsService {
   }
 
   // ================== SIP设置 ==================
-  
+
   /**
    * 获取SIP设置（包含账号和服务器设置）
    */
@@ -97,7 +97,7 @@ class SettingsService {
       // 复用现有方法，避免重复代码
       const accountSettings = await this.getAccountSettings();
       const serverSettings = await this.getServerSettings();
-      
+
       // 合并账号和服务器设置
       const sipSettings = {
         // 账号信息
@@ -106,7 +106,7 @@ class SettingsService {
         autoLogin: accountSettings.autoLogin,
         rememberPassword: accountSettings.rememberPassword,
         showOnlineStatus: accountSettings.showOnlineStatus,
-        
+
         // 服务器配置
         pcscfAddress: serverSettings.pcscfAddress,
         port: serverSettings.port,
@@ -115,7 +115,7 @@ class SettingsService {
         keepAliveInterval: serverSettings.keepAliveInterval,
         preset: serverSettings.preset,
       };
-      
+
       return sipSettings;
     } catch (error) {
       console.error('获取SIP设置失败:', error);
@@ -131,36 +131,36 @@ class SettingsService {
       // 分离账号和服务器设置
       const accountSettings = {};
       const serverSettings = {};
-      
+
       // 账号相关设置
-      if (sipSettings.sipAddress !== undefined) accountSettings.sipAddress = sipSettings.sipAddress;
-      if (sipSettings.password !== undefined) accountSettings.password = sipSettings.password;
-      if (sipSettings.autoLogin !== undefined) accountSettings.autoLogin = sipSettings.autoLogin;
-      if (sipSettings.rememberPassword !== undefined) accountSettings.rememberPassword = sipSettings.rememberPassword;
-      if (sipSettings.showOnlineStatus !== undefined) accountSettings.showOnlineStatus = sipSettings.showOnlineStatus;
-      
+      if (sipSettings.sipAddress !== undefined) {accountSettings.sipAddress = sipSettings.sipAddress;}
+      if (sipSettings.password !== undefined) {accountSettings.password = sipSettings.password;}
+      if (sipSettings.autoLogin !== undefined) {accountSettings.autoLogin = sipSettings.autoLogin;}
+      if (sipSettings.rememberPassword !== undefined) {accountSettings.rememberPassword = sipSettings.rememberPassword;}
+      if (sipSettings.showOnlineStatus !== undefined) {accountSettings.showOnlineStatus = sipSettings.showOnlineStatus;}
+
       // 服务器相关设置
-      if (sipSettings.pcscfAddress !== undefined) serverSettings.pcscfAddress = sipSettings.pcscfAddress;
-      if (sipSettings.port !== undefined) serverSettings.port = sipSettings.port;
-      if (sipSettings.useSSL !== undefined) serverSettings.useSSL = sipSettings.useSSL;
-      if (sipSettings.registrationTimeout !== undefined) serverSettings.registrationTimeout = sipSettings.registrationTimeout;
-      if (sipSettings.keepAliveInterval !== undefined) serverSettings.keepAliveInterval = sipSettings.keepAliveInterval;
-      if (sipSettings.preset !== undefined) serverSettings.preset = sipSettings.preset;
+      if (sipSettings.pcscfAddress !== undefined) {serverSettings.pcscfAddress = sipSettings.pcscfAddress;}
+      if (sipSettings.port !== undefined) {serverSettings.port = sipSettings.port;}
+      if (sipSettings.useSSL !== undefined) {serverSettings.useSSL = sipSettings.useSSL;}
+      if (sipSettings.registrationTimeout !== undefined) {serverSettings.registrationTimeout = sipSettings.registrationTimeout;}
+      if (sipSettings.keepAliveInterval !== undefined) {serverSettings.keepAliveInterval = sipSettings.keepAliveInterval;}
+      if (sipSettings.preset !== undefined) {serverSettings.preset = sipSettings.preset;}
 
       // 使用现有方法保存，避免重复代码
       const savePromises = [];
-      
+
       if (Object.keys(accountSettings).length > 0) {
         savePromises.push(this.saveAccountSettings(accountSettings));
       }
-      
+
       if (Object.keys(serverSettings).length > 0) {
         savePromises.push(this.saveServerSettings(serverSettings));
       }
-      
+
       // 并行保存所有设置
       await Promise.all(savePromises);
-      
+
       console.log('SIP设置保存成功');
       return true;
     } catch (error) {
@@ -170,7 +170,7 @@ class SettingsService {
   }
 
   // ================== 服务器设置 ==================
-  
+
   /**
    * 获取服务器设置
    */
@@ -199,16 +199,16 @@ class SettingsService {
       // 先获取现有设置，然后只更新提供的字段
       const existingSettings = await this.getServerSettings();
       const updatedSettings = { ...existingSettings, ...server };
-      
+
       const keyMapping = {
         pcscfAddress: 'server.pcscfAddress',
         port: 'server.port',
         useSSL: 'server.useSSL',
         registrationTimeout: 'server.registrationTimeout',
         keepAliveInterval: 'server.keepAliveInterval',
-        preset: 'server.preset'
+        preset: 'server.preset',
       };
-      
+
       return await this._saveSettingsHelper(updatedSettings, keyMapping, '服务器设置');
     } catch (error) {
       console.error('保存服务器设置失败:', error);
@@ -217,7 +217,7 @@ class SettingsService {
   }
 
   // ================== 应用设置 ==================
-  
+
   /**
    * 获取应用设置
    */
@@ -250,14 +250,14 @@ class SettingsService {
       autoDownloadImages: 'app.autoDownloadImages',
       soundEnabled: 'app.soundEnabled',
       vibrationEnabled: 'app.vibrationEnabled',
-      showTimestamp: 'app.showTimestamp'
+      showTimestamp: 'app.showTimestamp',
     };
-    
+
     return await this._saveSettingsHelper(app, keyMapping, '应用设置');
   }
 
   // ================== 隐私设置 ==================
-  
+
   /**
    * 获取隐私设置
    */
@@ -284,14 +284,14 @@ class SettingsService {
       readReceipts: 'privacy.readReceipts',
       typingIndicator: 'privacy.typingIndicator',
       lastSeenVisible: 'privacy.lastSeenVisible',
-      profilePhotoVisible: 'privacy.profilePhotoVisible'
+      profilePhotoVisible: 'privacy.profilePhotoVisible',
     };
-    
+
     return await this._saveSettingsHelper(privacy, keyMapping, '隐私设置');
   }
 
   // ================== 通用方法 ==================
-  
+
   /**
    * 通用设置保存辅助方法
    * @param {Object} sourceObject - 源对象
@@ -301,25 +301,25 @@ class SettingsService {
   async _saveSettingsHelper(sourceObject, keyMapping, logPrefix) {
     try {
       const settings = {};
-      
+
       for (const [sourceKey, dbKey] of Object.entries(keyMapping)) {
         if (sourceObject[sourceKey] !== undefined) {
           settings[dbKey] = sourceObject[sourceKey];
         }
       }
-      
+
       if (Object.keys(settings).length > 0) {
         await databaseService.saveMultipleSettings(settings);
         console.log(`${logPrefix}保存成功`);
       }
-      
+
       return true;
     } catch (error) {
       console.error(`${logPrefix}保存失败:`, error);
       throw error;
     }
   }
-  
+
   /**
    * 直接保存多个设置项
    * @param {Object} settings - 键值对对象，键为设置项名称，值为设置值
@@ -329,12 +329,12 @@ class SettingsService {
       if (!settings || typeof settings !== 'object') {
         throw new Error('设置数据必须是一个对象');
       }
-      
+
       if (Object.keys(settings).length === 0) {
         console.log('没有设置需要保存');
         return true;
       }
-      
+
       await databaseService.saveMultipleSettings(settings);
       console.log('批量设置保存成功:', Object.keys(settings));
       return true;
@@ -343,7 +343,7 @@ class SettingsService {
       throw error;
     }
   }
-  
+
   /**
    * 获取所有设置
    */
@@ -363,10 +363,10 @@ class SettingsService {
     try {
       // 删除所有现有设置
       await databaseService.database.executeSql('DELETE FROM user_settings');
-      
+
       // 重新初始化默认设置
       await databaseService.initializeDefaultSettings();
-      
+
       console.log('所有设置已重置');
       return true;
     } catch (error) {
@@ -404,7 +404,7 @@ class SettingsService {
   }
 
   // ================== 预设配置 ==================
-  
+
   /**
    * 获取服务器预设配置
    */
@@ -444,7 +444,7 @@ class SettingsService {
     try {
       const presets = this.getServerPresets();
       const preset = presets[presetKey];
-      
+
       if (!preset) {
         throw new Error(`未找到预设配置: ${presetKey}`);
       }

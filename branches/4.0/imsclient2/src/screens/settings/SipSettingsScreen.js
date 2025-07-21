@@ -11,7 +11,7 @@ import {
   Switch,
   Modal,
 } from 'react-native';
-import SettingsService from '../services/SettingsService';
+import SettingsService from '../../services/SettingsService';
 
 const SipSettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -22,7 +22,7 @@ const SipSettingsScreen = ({ navigation }) => {
     rememberPassword: false,
     showOnlineStatus: true,
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -51,13 +51,13 @@ const SipSettingsScreen = ({ navigation }) => {
         Alert.alert('错误', '请输入SIP地址');
         return;
       }
-      
+
       // SIP地址格式验证
       if (!isValidSipAddress(sipAddress)) {
         Alert.alert('错误', '请输入有效的SIP地址格式 (例如: user@domain.com)');
         return;
       }
-      
+
       if (!settings.password.trim()) {
         Alert.alert('错误', '请输入密码');
         return;
@@ -66,15 +66,15 @@ const SipSettingsScreen = ({ navigation }) => {
       // 格式化SIP地址
       const formattedSettings = {
         ...settings,
-        sipAddress: formatSipAddress(sipAddress)
+        sipAddress: formatSipAddress(sipAddress),
       };
 
       await SettingsService.saveSipSettings(formattedSettings);
       Alert.alert('成功', 'SIP设置保存成功', [
         {
           text: '确定',
-          onPress: () => navigation.goBack()
-        }
+          onPress: () => navigation.goBack(),
+        },
       ]);
     } catch (error) {
       console.error('保存SIP设置失败:', error);
@@ -97,8 +97,8 @@ const SipSettingsScreen = ({ navigation }) => {
             } catch (error) {
               Alert.alert('测试失败', error.message);
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -116,13 +116,13 @@ const SipSettingsScreen = ({ navigation }) => {
     if (!sipAddress || typeof sipAddress !== 'string') {
       return false;
     }
-    
+
     // 移除可能的sip:前缀
     let address = sipAddress.toLowerCase();
     if (address.startsWith('sip:')) {
       address = address.substring(4);
     }
-    
+
     // 基本格式检查: user@domain
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailPattern.test(address);
@@ -138,14 +138,14 @@ const SipSettingsScreen = ({ navigation }) => {
     if (!sipAddress) {
       return '';
     }
-    
+
     let address = sipAddress.trim().toLowerCase();
-    
+
     // 移除sip:前缀（如果存在）
     if (address.startsWith('sip:')) {
       address = address.substring(4);
     }
-    
+
     return address;
   };
 
@@ -206,7 +206,7 @@ const SipSettingsScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* 头部导航 */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation?.goBack()}
         >
@@ -219,11 +219,11 @@ const SipSettingsScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        
+
         {/* 账号信息 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>账号信息</Text>
-          
+
           {renderInput(
             'SIP地址',
             settings.sipAddress,
@@ -232,7 +232,7 @@ const SipSettingsScreen = ({ navigation }) => {
             false,
             'email-address'
           )}
-          
+
           {renderInput(
             '密码',
             settings.password,
@@ -240,21 +240,21 @@ const SipSettingsScreen = ({ navigation }) => {
             '请输入登录密码',
             true
           )}
-          
+
           {renderSwitchItem(
             '记住密码',
             '下次启动时自动填入密码',
             settings.rememberPassword,
             (value) => updateSetting('rememberPassword', value)
           )}
-          
+
           {renderSwitchItem(
             '自动登录',
             '应用启动时自动尝试SIP注册',
             settings.autoLogin,
             (value) => updateSetting('autoLogin', value)
           )}
-          
+
           {renderSwitchItem(
             '显示在线状态',
             '让联系人看到您的在线状态',
@@ -266,7 +266,7 @@ const SipSettingsScreen = ({ navigation }) => {
         {/* 服务器设置链接 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>服务器设置</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.serverSettingsLink}
             onPress={() => navigation.navigate('ServerSettings')}
           >

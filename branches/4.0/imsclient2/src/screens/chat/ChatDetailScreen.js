@@ -13,28 +13,75 @@ import {
   NativeModules,
   DeviceEventEmitter,
 } from 'react-native';
-import databaseService from '../services/DatabaseService';
+import databaseService from '../../services/DatabaseService';
 
 const { LoginModule, MessageModule } = NativeModules;
 
 const ChatDetailScreen = ({ route, navigation }) => {
-  const { chatName = '张三', chatId } = route?.params || {};
+  const {
+    chatName = '好友',
+    chatId,
+    sipAddress,
+    friendId,
+  } = route?.params || {};
+
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentChatId, setCurrentChatId] = useState(chatId);
-  
+
   const flatListRef = useRef(null);
 
   useEffect(() => {
-    loadMessages();
+    initializeChatAndLoadMessages();
     setupMessageListener();
-    
+
+    // 设置导航标题
+    navigation.setOptions({
+      title: chatName,
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    });
+
     return () => {
       // 清理事件监听器
       DeviceEventEmitter.removeAllListeners('onNewMessage');
     };
   }, []);
+
+  const initializeChatAndLoadMessages = async () => {
+    try {
+      setLoading(true);
+      let targetChatId = currentChatId;
+
+      // 如果有SIP地址，优先通过SIP地址获取或创建聊天
+      if (sipAddress && !targetChatId) {
+        targetChatId = await databaseService.getOrCreateChatBySipAddress(
+          sipAddress,
+          chatName
+        );
+        setCurrentChatId(targetChatId);
+      }
+      // 如果没有chatId，通过chatName查找
+      else if (!targetChatId) {
+        targetChatId = await databaseService.getChatIdByName(chatName);
+        setCurrentChatId(targetChatId);
+      }
+
+      if (targetChatId) {
+        const messageList = await databaseService.getMessagesByChatId(targetChatId);
+        setMessages(messageList);
+      } else {
+        console.warn('无法找到聊天记录');
+      }
+    } catch (error) {
+      console.error('初始化聊天失败:', error);
+      Alert.alert('错误', '加载聊天记录失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 设置消息监听器
   const setupMessageListener = () => {
@@ -43,52 +90,29 @@ const ChatDetailScreen = ({ route, navigation }) => {
         // 使用 DeviceEventEmitter 监听事件
         DeviceEventEmitter.addListener('onNewMessage', (messageData) => {
           const { fromUser, messageText, timestamp } = messageData;
-          
+
           // 检查新消息是否来自当前聊天对象
           if (fromUser === chatName) {
             console.log(`收到来自 ${fromUser} 的新消息，刷新聊天界面`);
-            
+
             // 创建新消息对象
             const newMessage = {
               id: Date.now().toString(), // 临时ID
               text: messageText,
               isMyMessage: false,
-              timestamp: timestamp
+              timestamp: timestamp,
             };
-            
+
             // 直接添加到消息列表，避免重新加载
             setMessages(prevMessages => [...prevMessages, newMessage]);
-            
+
             // 也可以选择重新加载以获取正确的数据库ID
-            // loadMessages();
+            // initializeChatAndLoadMessages();
           }
         });
       }
     } catch (error) {
       console.error('设置消息监听器失败:', error);
-    }
-  };
-
-  const loadMessages = async () => {
-    try {
-      setLoading(true);
-      let targetChatId = currentChatId;
-      
-      // 如果没有chatId，通过chatName查找
-      if (!targetChatId) {
-        targetChatId = await databaseService.getChatIdByName(chatName);
-        setCurrentChatId(targetChatId);
-      }
-      
-      if (targetChatId) {
-        const messageList = await databaseService.getMessagesByChatId(targetChatId);
-        setMessages(messageList);
-      }
-    } catch (error) {
-      console.error('加载消息失败:', error);
-      Alert.alert('错误', '加载消息失败');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -105,24 +129,27 @@ const ChatDetailScreen = ({ route, navigation }) => {
         const messageText = message.trim();
         setMessage('');
 
-        // 获取接收者的SIP地址
-        const sipAddress = await databaseService.getSipAddressByName(chatName);
-        if (!sipAddress) {
-          console.warn('未找到用户的SIP地址:', chatName);
-          Alert.alert('错误', '未找到用户的SIP地址');
-          return;
+        // 使用传入的SIP地址或从数据库获取
+        let targetSipAddress = sipAddress;
+        if (!targetSipAddress) {
+          targetSipAddress = await databaseService.getSipAddressByName(chatName);
+          if (!targetSipAddress) {
+            console.warn('未找到用户的SIP地址:', chatName);
+            Alert.alert('错误', '未找到用户的SIP地址');
+            return;
+          }
         }
 
         // 添加到数据库
         await databaseService.addMessage(currentChatId, messageText, true);
-        
+
         // 重新加载消息列表
-        await loadMessages();
+        await initializeChatAndLoadMessages();
 
         // 通过SIP发送消息
         try {
-          await LoginModule.sendTextMessage(sipAddress, messageText);
-          console.log('SIP消息发送成功到:', sipAddress);
+          await LoginModule.sendTextMessage(targetSipAddress, messageText);
+          console.log('SIP消息发送成功到:', targetSipAddress);
         } catch (sipError) {
           console.error('SIP发送失败:', sipError);
           Alert.alert('发送失败', '消息发送失败，请检查网络连接');
@@ -139,15 +166,15 @@ const ChatDetailScreen = ({ route, navigation }) => {
   const renderMessage = ({ item }) => (
     <View style={[
       styles.messageContainer,
-      item.isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer
+      item.isMyMessage ? styles.myMessageContainer : styles.otherMessageContainer,
     ]}>
       <View style={[
         styles.messageBubble,
-        item.isMyMessage ? styles.myMessageBubble : styles.otherMessageBubble
+        item.isMyMessage ? styles.myMessageBubble : styles.otherMessageBubble,
       ]}>
         <Text style={[
           styles.messageText,
-          item.isMyMessage ? styles.myMessageText : styles.otherMessageText
+          item.isMyMessage ? styles.myMessageText : styles.otherMessageText,
         ]}>
           {item.text}
         </Text>
@@ -160,7 +187,7 @@ const ChatDetailScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* 头部导航 */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation?.goBack()}
         >
@@ -184,7 +211,7 @@ const ChatDetailScreen = ({ route, navigation }) => {
       />
 
       {/* 输入框 */}
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inputContainer}
       >
@@ -192,7 +219,7 @@ const ChatDetailScreen = ({ route, navigation }) => {
           <TouchableOpacity style={styles.voiceButton}>
             <Text style={styles.voiceButtonText}>🎤</Text>
           </TouchableOpacity>
-          
+
           <TextInput
             style={styles.textInput}
             value={message}
@@ -202,17 +229,17 @@ const ChatDetailScreen = ({ route, navigation }) => {
             multiline
             maxLength={500}
           />
-          
+
           <TouchableOpacity style={styles.emojiButton}>
             <Text style={styles.emojiButtonText}>😊</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.addButton}>
             <Text style={styles.addButtonText}>+</Text>
           </TouchableOpacity>
-          
+
           {message.trim() ? (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.sendButton}
               onPress={sendMessage}
             >

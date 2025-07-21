@@ -11,7 +11,7 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
-import SettingsService from '../services/SettingsService';
+import SettingsService from '../../services/SettingsService';
 
 const BasicConfigScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -19,15 +19,15 @@ const BasicConfigScreen = ({ navigation }) => {
     sipAddress: '',
     password: '',
     autoLogin: false,
-    
+
     // 服务器配置
     pcscfAddress: '',
     port: '4060',
-    
+
     // 高级选项
     showAdvanced: false,
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,23 +40,23 @@ const BasicConfigScreen = ({ navigation }) => {
   const loadBasicConfig = async () => {
     try {
       setLoading(true);
-      
+
       // 并行加载账号和服务器设置
       const [accountSettings, serverSettings] = await Promise.all([
         SettingsService.getAccountSettings(),
-        SettingsService.getServerSettings()
+        SettingsService.getServerSettings(),
       ]);
-      
+
       setSettings({
         // SIP账号配置
         sipAddress: accountSettings.sipAddress || '',
         password: accountSettings.password || '',
         autoLogin: accountSettings.autoLogin || false,
-        
+
         // 服务器配置
         pcscfAddress: serverSettings.pcscfAddress || '',
         port: serverSettings.port || '5060',
-        
+
         // 界面状态
         showAdvanced: false,
       });
@@ -71,7 +71,7 @@ const BasicConfigScreen = ({ navigation }) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // 验证必填字段
       if (!validateBasicConfig()) {
         return;
@@ -79,7 +79,7 @@ const BasicConfigScreen = ({ navigation }) => {
 
       // 格式化和保存设置
       const formattedSettings = formatSettingsForSave();
-      
+
       // 分别保存账号和服务器设置
       await Promise.all([
         SettingsService.saveAccountSettings({
@@ -90,14 +90,14 @@ const BasicConfigScreen = ({ navigation }) => {
         SettingsService.saveServerSettings({
           pcscfAddress: formattedSettings.pcscfAddress,
           port: formattedSettings.port,
-        })
+        }),
       ]);
 
       Alert.alert('成功', '基本配置保存成功', [
         {
           text: '确定',
-          onPress: () => navigation.goBack()
-        }
+          onPress: () => navigation.goBack(),
+        },
       ]);
     } catch (error) {
       console.error('保存基本配置失败:', error);
@@ -114,37 +114,37 @@ const BasicConfigScreen = ({ navigation }) => {
       Alert.alert('错误', '请输入SIP地址');
       return false;
     }
-    
+
     if (!isValidSipAddress(sipAddress)) {
       Alert.alert('错误', '请输入有效的SIP地址格式 (例如: user@domain.com)');
       return false;
     }
-    
+
     // 验证密码
     if (!settings.password.trim()) {
       Alert.alert('错误', '请输入密码');
       return false;
     }
-    
+
     // 验证服务器地址
     const pcscfAddress = settings.pcscfAddress.trim();
     if (!pcscfAddress) {
       Alert.alert('错误', '请输入服务器地址');
       return false;
     }
-    
+
     if (!isValidServerAddress(pcscfAddress)) {
       Alert.alert('错误', '请输入有效的服务器地址');
       return false;
     }
-    
+
     // 验证端口号
     const port = settings.port.trim();
     if (!port || isNaN(port) || parseInt(port) <= 0 || parseInt(port) > 65535) {
       Alert.alert('错误', '请输入有效的端口号 (1-65535)');
       return false;
     }
-    
+
     return true;
   };
 
@@ -162,12 +162,12 @@ const BasicConfigScreen = ({ navigation }) => {
     if (!sipAddress || typeof sipAddress !== 'string') {
       return false;
     }
-    
+
     let address = sipAddress.toLowerCase();
     if (address.startsWith('sip:')) {
       address = address.substring(4);
     }
-    
+
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailPattern.test(address);
   };
@@ -176,12 +176,12 @@ const BasicConfigScreen = ({ navigation }) => {
     if (!serverAddress || typeof serverAddress !== 'string') {
       return false;
     }
-    
+
     // 域名格式验证
     const domainPattern = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     // IP地址格式验证
     const ipPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    
+
     return domainPattern.test(serverAddress) || ipPattern.test(serverAddress);
   };
 
@@ -189,27 +189,27 @@ const BasicConfigScreen = ({ navigation }) => {
     if (!sipAddress) {
       return '';
     }
-    
+
     let address = sipAddress.trim().toLowerCase();
     if (address.startsWith('sip:')) {
       address = address.substring(4);
     }
-    
+
     return address;
   };
 
   const handleTestConnection = async () => {
     try {
       setTestingConnection(true);
-      
+
       // 首先验证配置
       if (!validateBasicConfig()) {
         return;
       }
-      
+
       // 这里可以调用原生模块测试连接
       Alert.alert('提示', '连接测试功能开发中...');
-      
+
     } catch (error) {
       console.error('测试连接失败:', error);
       Alert.alert('测试失败', error.message || '连接测试失败');
@@ -227,7 +227,7 @@ const BasicConfigScreen = ({ navigation }) => {
       secureTextEntry = false,
       keyboardType = 'default',
       editable = true,
-      required = false
+      required = false,
     } = options;
 
     return (
@@ -282,7 +282,7 @@ const BasicConfigScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation?.goBack()}
           >
@@ -302,11 +302,11 @@ const BasicConfigScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        
+
         {/* SIP账号配置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>SIP账号配置</Text>
-          
+
           {renderInput(
             'SIP地址',
             settings.sipAddress,
@@ -314,7 +314,7 @@ const BasicConfigScreen = ({ navigation }) => {
             '例如: user@domain.com',
             { keyboardType: 'email-address', required: true }
           )}
-          
+
           {renderInput(
             '密码',
             settings.password,
@@ -322,7 +322,7 @@ const BasicConfigScreen = ({ navigation }) => {
             '请输入登录密码',
             { secureTextEntry: true, required: true }
           )}
-          
+
           {renderSwitchItem(
             '自动登录',
             '应用启动时自动尝试SIP注册',
@@ -334,7 +334,7 @@ const BasicConfigScreen = ({ navigation }) => {
         {/* 服务器配置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>服务器配置</Text>
-          
+
           {renderInput(
             '服务器地址',
             settings.pcscfAddress,
@@ -342,7 +342,7 @@ const BasicConfigScreen = ({ navigation }) => {
             '例如: pcscf.example.com',
             { keyboardType: 'url', required: true }
           )}
-          
+
           {renderInput(
             '端口号',
             settings.port,
@@ -354,8 +354,8 @@ const BasicConfigScreen = ({ navigation }) => {
 
         {/* 操作按钮 */}
         <View style={styles.buttonSection}>
-          <TouchableOpacity 
-            style={styles.testButton} 
+          <TouchableOpacity
+            style={styles.testButton}
             onPress={handleTestConnection}
             disabled={testingConnection}
           >
@@ -365,9 +365,9 @@ const BasicConfigScreen = ({ navigation }) => {
               <Text style={styles.testButtonText}>测试连接</Text>
             )}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.advancedButton} 
+
+          <TouchableOpacity
+            style={styles.advancedButton}
             onPress={() => navigation.navigate('AdvancedSettings')}
           >
             <Text style={styles.advancedButtonText}>高级设置</Text>
@@ -387,8 +387,8 @@ const BasicConfigScreen = ({ navigation }) => {
         </View>
 
         {/* 保存按钮 */}
-        <TouchableOpacity 
-          style={styles.saveButtonMain} 
+        <TouchableOpacity
+          style={styles.saveButtonMain}
           onPress={handleSave}
           disabled={saving}
         >

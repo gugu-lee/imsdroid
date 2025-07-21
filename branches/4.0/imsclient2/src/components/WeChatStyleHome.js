@@ -2,17 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ChatScreen from '../screens/ChatScreen';
+import ChatScreen from '../screens/chat/ChatScreen';
 import settingsService from '../services/SettingsService';
 
 const Tab = createBottomTabNavigator();
 
 // 通讯录页面组件
-const ContactsScreen = () => (
+const ContactsScreen = ({ navigation }) => (
   <SafeAreaView style={styles.screenContainer}>
-    <Text style={styles.header}>通讯录</Text>
+    <View style={styles.friendsHeader}>
+      <Text style={styles.header}>通讯录</Text>
+      <TouchableOpacity
+        style={styles.addFriendButton}
+        onPress={() => navigation.navigate('AddFriend')}
+      >
+        <Icon name="person-add" size={24} color="#007AFF" />
+      </TouchableOpacity>
+    </View>
     <View style={styles.content}>
-      <Text style={styles.contentText}>这里是通讯录</Text>
+      <TouchableOpacity
+        style={styles.friendsMenuCard}
+        onPress={() => navigation.navigate('Friends')}
+      >
+        <View style={styles.friendsIconContainer}>
+          <Icon name="group" size={32} color="#ffffff" />
+        </View>
+        <View style={styles.friendsTextContainer}>
+          <Text style={styles.friendsTitle}>我的好友</Text>
+          <Text style={styles.friendsSubtitle}>查看和管理好友列表</Text>
+        </View>
+        <Icon name="chevron-right" size={24} color="#999" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.friendsMenuCard}
+        onPress={() => navigation.navigate('AddFriend')}
+      >
+        <View style={[styles.friendsIconContainer, { backgroundColor: '#4CAF50' }]}>
+          <Icon name="person-add" size={32} color="#ffffff" />
+        </View>
+        <View style={styles.friendsTextContainer}>
+          <Text style={styles.friendsTitle}>添加好友</Text>
+          <Text style={styles.friendsSubtitle}>通过SIP地址添加新好友</Text>
+        </View>
+        <Icon name="chevron-right" size={24} color="#999" />
+      </TouchableOpacity>
     </View>
   </SafeAreaView>
 );
@@ -32,7 +66,7 @@ const ProfileScreen = ({ navigation }) => {
   const [userProfile, setUserProfile] = useState({
     nickname: '用户名称',
     signature: '个性签名',
-    avatar: 'https://via.placeholder.com/60'
+    avatar: 'https://via.placeholder.com/60',
   });
 
   useEffect(() => {
@@ -45,7 +79,7 @@ const ProfileScreen = ({ navigation }) => {
       setUserProfile({
         nickname: profile.nickname,
         signature: profile.signature,
-        avatar: profile.avatar
+        avatar: profile.avatar,
       });
     } catch (error) {
       console.error('加载用户信息失败:', error);
@@ -57,12 +91,12 @@ const ProfileScreen = ({ navigation }) => {
       <Text style={styles.header}>我</Text>
       <View style={styles.content}>
         {/* 用户信息区域 */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.userInfo}
           onPress={() => navigation.navigate('ProfileSettings')}
         >
-          <Image 
-            source={{ uri: userProfile.avatar }} 
+          <Image
+            source={{ uri: userProfile.avatar }}
             style={styles.avatar}
           />
           <View style={styles.userDetails}>
@@ -74,7 +108,7 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* 功能菜单 */}
         <View style={styles.menuSection}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => navigation.navigate('Settings')}
           >
@@ -110,7 +144,7 @@ const WeChatStyleHome = ({ navigation }) => {
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#07c160',
+        tabBarActiveTintColor: '#1AAD19',
         tabBarInactiveTintColor: '#999999',
         tabBarStyle: {
           backgroundColor: '#ffffff',
@@ -126,13 +160,19 @@ const WeChatStyleHome = ({ navigation }) => {
         },
       })}
     >
-      <Tab.Screen 
-        name="聊天" 
-        children={() => <ChatScreen navigation={navigation} />} 
+      <Tab.Screen
+        name="聊天"
+        children={() => <ChatScreen navigation={navigation} />}
       />
-      <Tab.Screen name="通讯录" component={ContactsScreen} />
+      <Tab.Screen
+        name="通讯录"
+        children={() => <ContactsScreen navigation={navigation} />}
+      />
       <Tab.Screen name="发现" component={DiscoverScreen} />
-      <Tab.Screen name="我" component={ProfileScreen} />
+      <Tab.Screen
+        name="我"
+        children={() => <ProfileScreen navigation={navigation} />}
+      />
     </Tab.Navigator>
   );
 };
@@ -166,8 +206,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    padding: 20,
     borderRadius: 12,
+    padding: 15,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
@@ -189,13 +229,13 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: '600',
+    color: '#000000',
     marginBottom: 5,
   },
   userSignature: {
     fontSize: 14,
-    color: '#666',
+    color: '#666666',
   },
   // 菜单样式
   menuSection: {
@@ -227,7 +267,62 @@ const styles = StyleSheet.create({
   menuText: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: '#333333',
+  },
+  // 好友页面样式
+  friendsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    backgroundColor: '#ffffff',
+    borderBottomColor: '#e5e5e5',
+    borderBottomWidth: 1,
+  },
+  addFriendButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  friendsMenuCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  friendsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  friendsTextContainer: {
+    flex: 1,
+  },
+  friendsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  friendsSubtitle: {
+    fontSize: 14,
+    color: '#666666',
   },
 });
 

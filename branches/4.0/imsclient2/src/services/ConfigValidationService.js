@@ -5,7 +5,7 @@ import SettingsService from './SettingsService';
  * 用于检查SIP配置是否完整
  */
 class ConfigValidationService {
-  
+
   /**
    * 检查基本SIP配置是否完整
    * @returns {Promise<{isComplete: boolean, missingFields: string[], data: Object}>}
@@ -16,33 +16,33 @@ class ConfigValidationService {
       const password = await SettingsService.getSetting('account.password', '');
       const serverAddress = await SettingsService.getSetting('server.pcscfAddress', '');
       const port = await SettingsService.getSetting('server.port', '');
-      
+
       const config = {
         sipAddress: sipAddress.trim(),
         password: password.trim(),
         serverAddress: serverAddress.trim(),
         port: port.trim(),
       };
-      
+
       const missingFields = [];
-      
+
       // 检查SIP地址
       if (!config.sipAddress) {
         missingFields.push('SIP地址');
       } else if (!config.sipAddress.includes('@')) {
         missingFields.push('SIP地址格式');
       }
-      
+
       // 检查密码
       if (!config.password) {
         missingFields.push('密码');
       }
-      
+
       // 检查服务器地址
       if (!config.serverAddress) {
         missingFields.push('服务器地址');
       }
-      
+
       // 检查端口号
       if (!config.port) {
         missingFields.push('端口号');
@@ -52,25 +52,25 @@ class ConfigValidationService {
           missingFields.push('端口号格式');
         }
       }
-      
+
       const isComplete = missingFields.length === 0;
-      
+
       return {
         isComplete,
         missingFields,
-        data: config
+        data: config,
       };
-      
+
     } catch (error) {
       console.error('检查配置失败:', error);
       return {
         isComplete: false,
         missingFields: ['配置检查失败'],
-        data: {}
+        data: {},
       };
     }
   }
-  
+
   /**
    * 获取配置建议
    * @param {Object} currentConfig - 当前配置
@@ -78,25 +78,25 @@ class ConfigValidationService {
    */
   getConfigSuggestions(currentConfig = {}) {
     const suggestions = {};
-    
+
     // SIP地址建议
     if (!currentConfig.sipAddress || !currentConfig.sipAddress.includes('@')) {
       suggestions.sipAddress = 'user@ims.freeims.net';
     }
-    
+
     // 服务器地址建议
     if (!currentConfig.serverAddress) {
       suggestions.serverAddress = 'pcscf.freeims.net';
     }
-    
+
     // 端口号建议
     if (!currentConfig.port || isNaN(parseInt(currentConfig.port))) {
       suggestions.port = '4060';
     }
-    
+
     return suggestions;
   }
-  
+
   /**
    * 验证单个配置项
    * @param {string} field - 字段名
@@ -107,9 +107,9 @@ class ConfigValidationService {
     const result = {
       isValid: true,
       error: null,
-      suggestion: null
+      suggestion: null,
     };
-    
+
     switch (field) {
       case 'sipAddress':
         if (!value || !value.trim()) {
@@ -122,7 +122,7 @@ class ConfigValidationService {
           result.suggestion = `${value}@ims.freeims.net`;
         }
         break;
-        
+
       case 'password':
         if (!value || !value.trim()) {
           result.isValid = false;
@@ -132,7 +132,7 @@ class ConfigValidationService {
           result.error = '密码长度至少3位';
         }
         break;
-        
+
       case 'serverAddress':
         if (!value || !value.trim()) {
           result.isValid = false;
@@ -140,7 +140,7 @@ class ConfigValidationService {
           result.suggestion = 'pcscf.freeims.net';
         }
         break;
-        
+
       case 'port':
         const portNum = parseInt(value);
         if (!value || isNaN(portNum)) {
@@ -153,14 +153,14 @@ class ConfigValidationService {
           result.suggestion = '4060';
         }
         break;
-        
+
       default:
         result.error = '未知的配置项';
     }
-    
+
     return result;
   }
-  
+
   /**
    * 检查是否启用自动登录
    * @returns {Promise<boolean>}
@@ -174,7 +174,7 @@ class ConfigValidationService {
       return false;
     }
   }
-  
+
   /**
    * 获取完整的启动配置检查结果
    * @returns {Promise<Object>}
@@ -183,16 +183,16 @@ class ConfigValidationService {
     try {
       const configCheck = await this.checkBasicConfig();
       const autoLoginEnabled = await this.isAutoLoginEnabled();
-      
+
       return {
         configComplete: configCheck.isComplete,
         autoLoginEnabled,
         shouldShowLogin: !configCheck.isComplete || !autoLoginEnabled,
         missingFields: configCheck.missingFields,
         currentConfig: configCheck.data,
-        suggestions: this.getConfigSuggestions(configCheck.data)
+        suggestions: this.getConfigSuggestions(configCheck.data),
       };
-      
+
     } catch (error) {
       console.error('获取启动配置状态失败:', error);
       return {
@@ -201,7 +201,7 @@ class ConfigValidationService {
         shouldShowLogin: true,
         missingFields: ['配置检查失败'],
         currentConfig: {},
-        suggestions: this.getConfigSuggestions()
+        suggestions: this.getConfigSuggestions(),
       };
     }
   }

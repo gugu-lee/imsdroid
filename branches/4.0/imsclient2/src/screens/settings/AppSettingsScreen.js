@@ -10,7 +10,7 @@ import {
   Switch,
   Modal,
 } from 'react-native';
-import SettingsService from '../services/SettingsService';
+import SettingsService from '../../services/SettingsService';
 
 const AppSettingsScreen = ({ navigation }) => {
   const [settings, setSettings] = useState({
@@ -100,7 +100,7 @@ const AppSettingsScreen = ({ navigation }) => {
                 key={option.key}
                 style={[
                   styles.modalOption,
-                  currentValue === option.key && styles.modalOptionSelected
+                  currentValue === option.key && styles.modalOptionSelected,
                 ]}
                 onPress={() => {
                   onSelect(option.key);
@@ -109,7 +109,7 @@ const AppSettingsScreen = ({ navigation }) => {
               >
                 <Text style={[
                   styles.modalOptionText,
-                  currentValue === option.key && styles.modalOptionTextSelected
+                  currentValue === option.key && styles.modalOptionTextSelected,
                 ]}>
                   {option.label}
                 </Text>
@@ -167,28 +167,28 @@ const AppSettingsScreen = ({ navigation }) => {
         {/* 显示设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>显示设置</Text>
-          
+
           {renderSettingItem(
             '语言',
             languageOptions.find(opt => opt.key === settings.language)?.label,
             () => setShowLanguageModal(true),
             <Text style={styles.arrow}>›</Text>
           )}
-          
+
           {renderSettingItem(
             '主题',
             themeOptions.find(opt => opt.key === settings.theme)?.label,
             () => setShowThemeModal(true),
             <Text style={styles.arrow}>›</Text>
           )}
-          
+
           {renderSettingItem(
             '字体大小',
             fontSizeOptions.find(opt => opt.key === settings.fontSize)?.label,
             () => setShowFontSizeModal(true),
             <Text style={styles.arrow}>›</Text>
           )}
-          
+
           {renderSwitchItem(
             '显示时间戳',
             '在消息中显示发送时间',
@@ -200,7 +200,7 @@ const AppSettingsScreen = ({ navigation }) => {
         {/* 媒体设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>媒体设置</Text>
-          
+
           {renderSwitchItem(
             '自动下载图片',
             '使用WLAN时自动下载图片',
@@ -212,14 +212,14 @@ const AppSettingsScreen = ({ navigation }) => {
         {/* 通知设置 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>通知设置</Text>
-          
+
           {renderSwitchItem(
             '声音提醒',
             '接收消息时播放提示音',
             settings.soundEnabled,
             (value) => updateSetting('soundEnabled', value)
           )}
-          
+
           {renderSwitchItem(
             '震动提醒',
             '接收消息时震动提醒',

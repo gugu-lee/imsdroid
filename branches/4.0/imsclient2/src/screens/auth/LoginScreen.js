@@ -12,7 +12,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import SettingsService from '../services/SettingsService';
+import SettingsService from '../../services/SettingsService';
 import { NativeModules } from 'react-native';
 
 const { BasicConfigModule } = NativeModules;
@@ -32,7 +32,7 @@ const LoginScreen = ({ navigation, route }) => {
     if (route?.params?.initialData) {
       setFormData(prev => ({
         ...prev,
-        ...route.params.initialData
+        ...route.params.initialData,
       }));
     } else {
       // 尝试从设置中加载现有数据
@@ -45,14 +45,14 @@ const LoginScreen = ({ navigation, route }) => {
       const sipAddress = await SettingsService.getSetting('account.sipAddress', 'sip:bob@freeims.net');
       const serverAddress = await SettingsService.getSetting('server.pcscfAddress', '10.0.2.2');
       const port = await SettingsService.getSetting('server.port', '4060');
-      
+
       setFormData(prev => ({
         ...prev,
         sipAddress,
         serverAddress,
         port,
         // 不加载密码，让用户重新输入，但保持默认值
-        password: 'bob'
+        password: 'bob',
       }));
     } catch (error) {
       console.error('加载现有设置失败:', error);
@@ -90,17 +90,17 @@ const LoginScreen = ({ navigation, route }) => {
   };
 
   const formatSipAddress = (address) => {
-    if (!address) return '';
-    
+    if (!address) {return '';}
+
     // 移除可能的sip:前缀
     let cleanAddress = address.replace(/^sip:/, '');
-    
+
     // 确保包含@符号
     if (!cleanAddress.includes('@')) {
       // 如果只有用户名，添加默认域名
       cleanAddress = `${cleanAddress}@freeims.net`;
     }
-    
+
     return cleanAddress;
   };
 
@@ -221,26 +221,26 @@ const LoginScreen = ({ navigation, route }) => {
   const updateField = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // 清除该字段的错误
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [field]: undefined
+        [field]: undefined,
       }));
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >

@@ -17,13 +17,13 @@ class StartupService {
   static async validateSipConfiguration() {
     try {
       const sipSettings = await SettingsService.getSipSettings();
-      
+
       // 检查必需的SIP参数
       const requiredFields = {
         sipAddress: sipSettings.sipAddress,
         password: sipSettings.password,
         pcscfAddress: sipSettings.pcscfAddress,
-        port: sipSettings.port
+        port: sipSettings.port,
       };
 
       const missingFields = [];
@@ -49,7 +49,7 @@ class StartupService {
         isValid: missingFields.length === 0 && emptyFields.length === 0,
         missingFields,
         invalidFields: emptyFields,
-        settings: sipSettings
+        settings: sipSettings,
       };
 
     } catch (error) {
@@ -59,7 +59,7 @@ class StartupService {
         error: error.message,
         missingFields: ['所有配置'],
         invalidFields: [],
-        settings: null
+        settings: null,
       };
     }
   }
@@ -68,17 +68,17 @@ class StartupService {
   static async attemptAutoRegistration() {
     try {
       console.log('开始自动SIP注册...');
-      
+
       // 使用新的配置验证服务
       const configCheck = await ConfigValidationService.checkBasicConfig();
-      
+
       if (!configCheck.isComplete) {
         console.log('SIP配置不完整:', configCheck.missingFields);
         return {
           success: false,
           reason: 'incomplete_config',
           message: `配置不完整: ${configCheck.missingFields.join(', ')}`,
-          validation: configCheck
+          validation: configCheck,
         };
       }
 
@@ -90,21 +90,21 @@ class StartupService {
         if (result.success) {
           return {
             success: true,
-            message: result.message || 'SIP注册成功'
+            message: result.message || 'SIP注册成功',
           };
         } else {
           return {
             success: false,
             reason: 'registration_failed',
             message: result.message || 'SIP注册失败',
-            validation: configCheck
+            validation: configCheck,
           };
         }
       } else {
         return {
           success: false,
           reason: 'module_unavailable',
-          message: 'SIP模块不可用'
+          message: 'SIP模块不可用',
         };
       }
 
@@ -114,7 +114,7 @@ class StartupService {
         success: false,
         reason: 'error',
         message: error.message,
-        error
+        error,
       };
     }
   }
@@ -122,7 +122,7 @@ class StartupService {
   // 显示配置引导对话框
   static showConfigurationGuidance(registrationResult) {
     const { reason, validation, message } = registrationResult;
-    
+
     let title = 'SIP配置';
     let messageText = '';
     let actions = [];
@@ -139,74 +139,74 @@ class StartupService {
             default: return `• ${field}`;
           }
         }).join('\n');
-        
-        const invalidFieldsText = validation.invalidFields.length > 0 
+
+        const invalidFieldsText = validation.invalidFields.length > 0
           ? '\n\n格式错误的字段:\n' + validation.invalidFields.map(field => `• ${field}`).join('\n')
           : '';
 
         messageText = `需要完成以下配置才能使用SIP功能:\n\n${missingFieldsText}${invalidFieldsText}`;
-        
+
         actions = [
           {
             text: '稍后配置',
-            style: 'cancel'
+            style: 'cancel',
           },
           {
             text: '账号设置',
-            onPress: () => this.navigateToSipSettings()
+            onPress: () => this.navigateToSipSettings(),
           },
           {
             text: '服务器设置',
-            onPress: () => this.navigateToServerSettings()
-          }
+            onPress: () => this.navigateToServerSettings(),
+          },
         ];
         break;
 
       case 'registration_failed':
         title = 'SIP注册失败';
         messageText = `配置已完整，但注册失败:\n\n${message}\n\n请检查网络连接和服务器设置。`;
-        
+
         actions = [
           {
             text: '稍后重试',
-            style: 'cancel'
+            style: 'cancel',
           },
           {
             text: '检查服务器设置',
-            onPress: () => this.navigateToServerSettings()
+            onPress: () => this.navigateToServerSettings(),
           },
           {
             text: '重新配置账号',
-            onPress: () => this.navigateToSipSettings()
-          }
+            onPress: () => this.navigateToSipSettings(),
+          },
         ];
         break;
 
       case 'module_unavailable':
         title = 'SIP模块不可用';
         messageText = 'SIP功能模块暂时不可用，请稍后重试或联系技术支持。';
-        
+
         actions = [
           {
             text: '确定',
-            style: 'cancel'
-          }
+            style: 'cancel',
+          },
         ];
         break;
 
       default:
         title = 'SIP连接失败';
         messageText = `连接失败: ${message}\n\n请检查配置和网络连接。`;
-        
+
         actions = [
           {
             text: '取消',
-            style: 'cancel'
+            style: 'cancel',
           },
           {
             text: '重新配置',
-            onPress: () => this.navigateToSipSettings()
-          }
+            onPress: () => this.navigateToSipSettings(),
+          },
         ];
         break;
     }
@@ -232,7 +232,7 @@ class StartupService {
   static showSuccessMessage(message) {
     // 使用简单的控制台日志，避免打扰用户体验
     console.log('✅ SIP注册成功:', message);
-    
+
     // 可选：显示轻量级的成功提示
     // Toast.show({
     //   text: 'SIP连接成功',
@@ -246,10 +246,10 @@ class StartupService {
   static async performStartupRegistration() {
     try {
       console.log('开始启动时SIP注册检查...');
-      
+
       // 检查用户是否启用了自动登录
       const autoLogin = await SettingsService.getSetting('account.autoLogin', false);
-      
+
       if (!autoLogin) {
         console.log('自动登录已禁用，跳过SIP注册');
         return;
@@ -257,7 +257,7 @@ class StartupService {
 
       // 尝试自动注册
       const result = await this.attemptAutoRegistration();
-      
+
       if (result.success) {
         this.showSuccessMessage(result.message);
       } else {

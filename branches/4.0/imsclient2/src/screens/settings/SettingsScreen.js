@@ -16,43 +16,43 @@ const SettingsScreen = ({ navigation }) => {
       title: '个人信息',
       subtitle: '头像、昵称等',
       icon: '👤',
-      screen: 'ProfileSettings'
+      screen: 'ProfileSettings',
     },
     {
       id: 'basic-config',
       title: '基本配置',
       subtitle: 'SIP地址、密码、服务器地址、端口、自动登录',
       icon: '⚙️',
-      screen: 'BasicConfig'
+      screen: 'BasicConfig',
     },
     {
       id: 'advanced-config',
       title: '高级设置',
       subtitle: 'SSL、超时设置、在线状态等',
       icon: '🔧',
-      screen: 'AdvancedSettings'
+      screen: 'AdvancedSettings',
     },
     {
       id: 'app',
       title: '应用设置',
       subtitle: '主题、语言、通知等',
       icon: '📱',
-      screen: 'AppSettings'
+      screen: 'AppSettings',
     },
     {
       id: 'privacy',
       title: '隐私设置',
       subtitle: '已读回执、在线状态等',
       icon: '🔒',
-      screen: 'PrivacySettings'
+      screen: 'PrivacySettings',
     },
     {
       id: 'about',
       title: '关于',
       subtitle: '版本信息',
       icon: 'ℹ️',
-      screen: 'AboutSettings'
-    }
+      screen: 'AboutSettings',
+    },
   ];
 
   const renderMenuItem = (item) => (
@@ -75,8 +75,8 @@ const SettingsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* 头部 */}
-      <View style={styles.header}>
-        <TouchableOpacity 
+      {/* <View style={styles.header}>
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation?.goBack()}
         >
@@ -84,7 +84,7 @@ const SettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>设置</Text>
         <View style={styles.placeholder} />
-      </View>
+      </View> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* 用户信息卡片 */}

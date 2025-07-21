@@ -16,14 +16,14 @@ class DatabaseService {
         name: 'ChatDB.db',
         location: 'default',
       });
-      
+
       console.log('数据库连接成功');
-      
+
       // 统一创建所有表和初始化数据
       await this.createAllTables();
       await this.initializeDefaultSettings();
       await this.insertInitialData();
-      
+
       console.log('数据库初始化完成');
       return this.database;
     } catch (error) {
@@ -36,7 +36,7 @@ class DatabaseService {
   async createAllTables() {
     try {
       console.log('开始创建数据表...');
-      
+
       // 创建聊天列表表
       await this.database.executeSql(`
         CREATE TABLE IF NOT EXISTS chat_list (
@@ -82,6 +82,36 @@ class DatabaseService {
         )
       `);
 
+      // 创建好友表
+      await this.database.executeSql(`
+        CREATE TABLE IF NOT EXISTS friends (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sipAddress TEXT UNIQUE NOT NULL,
+          displayName TEXT NOT NULL,
+          nickname TEXT,
+          avatar TEXT,
+          remark TEXT,
+          groupName TEXT DEFAULT 'default',
+          phone TEXT,
+          email TEXT,
+          status TEXT DEFAULT 'normal',
+          addTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updateTime DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // 创建在线状态表
+      await this.database.executeSql(`
+        CREATE TABLE IF NOT EXISTS presence (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sipAddress TEXT UNIQUE NOT NULL,
+          status TEXT DEFAULT 'offline',
+          statusMessage TEXT,
+          lastSeenTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updateTime DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       console.log('数据表创建成功');
     } catch (error) {
       console.error('创建数据表失败:', error);
@@ -95,10 +125,10 @@ class DatabaseService {
       // 检查是否已有聊天数据
       const [chatResults] = await this.database.executeSql('SELECT COUNT(*) as count FROM chat_list');
       const chatCount = chatResults.rows.item(0).count;
-      
+
       if (chatCount === 0) {
         console.log('插入初始聊天数据...');
-        
+
         // 插入示例聊天数据
         const chatData = [
           {
@@ -109,8 +139,8 @@ class DatabaseService {
             avatarUrl: 'https://picsum.photos/50/50?random=0',
             isOnline: 0,
             chatType: 'system',
-            sipAddress: 'system@local'
-          }
+            sipAddress: 'system@local',
+          },
         ];
 
         for (const chat of chatData) {
@@ -158,7 +188,7 @@ class DatabaseService {
           unreadCount: row.unread_count,
           avatar: row.avatar,
           isOnline: Boolean(row.is_online),
-          chatType: row.chat_type
+          chatType: row.chat_type,
         });
       }
 
@@ -190,7 +220,7 @@ class DatabaseService {
           id: row.id.toString(),
           text: row.text,
           isMyMessage: Boolean(row.is_my_message),
-          timestamp: row.timestamp
+          timestamp: row.timestamp,
         });
       }
 
@@ -249,7 +279,7 @@ class DatabaseService {
       await this.database.executeSql(`
         UPDATE chat_list SET sip_address = ? WHERE name = ?
       `, [sipAddress, chatName]);
-      
+
       console.log(`已为用户 ${chatName} 设置SIP地址: ${sipAddress}`);
       return true;
     } catch (error) {
@@ -261,9 +291,9 @@ class DatabaseService {
   // 添加新消息
   async addMessage(chatId, messageText, isMyMessage = true) {
     try {
-      const timestamp = new Date().toLocaleTimeString('zh-CN', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      const timestamp = new Date().toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
       });
 
       await this.database.executeSql(`
@@ -290,21 +320,21 @@ class DatabaseService {
   // 为接收到的消息创建或更新聊天记录（用于SIP消息接收）
   async addOrUpdateChatForIncomingMessage(senderName, messageText, sipAddress = null) {
     try {
-      const timestamp = new Date().toLocaleTimeString('zh-CN', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      const timestamp = new Date().toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
       });
 
       // 检查是否已存在该用户的聊天记录
       let chatId = await this.getChatIdByName(senderName);
-      
+
       if (!chatId) {
         // 如果不存在，创建新的聊天记录
         const [result] = await this.database.executeSql(`
           INSERT INTO chat_list (name, last_message, last_message_time, unread_count, chat_type, sip_address)
           VALUES (?, ?, ?, 1, 'private', ?)
         `, [senderName, messageText, timestamp, sipAddress]);
-        
+
         chatId = result.insertId;
         console.log(`为发送者 ${senderName} 创建新聊天记录，chatId: ${chatId}`);
       } else {
@@ -318,7 +348,7 @@ class DatabaseService {
               sip_address = COALESCE(?, sip_address)
           WHERE id = ?
         `, [messageText, timestamp, sipAddress, chatId]);
-        
+
         console.log(`更新发送者 ${senderName} 的聊天记录，chatId: ${chatId}`);
       }
 
@@ -365,7 +395,7 @@ class DatabaseService {
           unreadCount: row.unread_count,
           avatar: row.avatar,
           isOnline: Boolean(row.is_online),
-          chatType: row.chat_type
+          chatType: row.chat_type,
         });
       }
 
@@ -381,20 +411,20 @@ class DatabaseService {
     try {
       // 开始事务
       await this.database.executeSql('BEGIN TRANSACTION');
-      
+
       // 删除该聊天的所有消息
       await this.database.executeSql(`
         DELETE FROM messages WHERE chat_id = ?
       `, [chatId]);
-      
+
       // 删除聊天列表项
       await this.database.executeSql(`
         DELETE FROM chat_list WHERE id = ?
       `, [chatId]);
-      
+
       // 提交事务
       await this.database.executeSql('COMMIT');
-      
+
       console.log(`聊天记录 ${chatId} 删除成功`);
       return true;
     } catch (error) {
@@ -409,19 +439,19 @@ class DatabaseService {
   async deleteChatsBatch(chatIds) {
     try {
       await this.database.executeSql('BEGIN TRANSACTION');
-      
+
       for (const chatId of chatIds) {
         // 删除消息
         await this.database.executeSql(`
           DELETE FROM messages WHERE chat_id = ?
         `, [chatId]);
-        
+
         // 删除聊天列表项
         await this.database.executeSql(`
           DELETE FROM chat_list WHERE id = ?
         `, [chatId]);
       }
-      
+
       await this.database.executeSql('COMMIT');
       console.log(`批量删除聊天记录成功: ${chatIds.join(', ')}`);
       return true;
@@ -438,7 +468,7 @@ class DatabaseService {
       await this.database.executeSql(`
         DELETE FROM messages WHERE chat_id = ?
       `, [chatId]);
-      
+
       // 更新聊天列表，清空最后消息
       await this.database.executeSql(`
         UPDATE chat_list 
@@ -448,7 +478,7 @@ class DatabaseService {
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `, [chatId]);
-      
+
       console.log(`聊天 ${chatId} 的消息清空成功`);
       return true;
     } catch (error) {
@@ -458,7 +488,7 @@ class DatabaseService {
   }
 
   // ================== 用户设置相关方法 ==================
-  
+
   // 保存或更新用户设置
   async saveSetting(key, value, type = 'string') {
     try {
@@ -466,7 +496,7 @@ class DatabaseService {
         INSERT OR REPLACE INTO user_settings (setting_key, setting_value, setting_type, updated_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP)
       `, [key, JSON.stringify(value), type]);
-      
+
       console.log(`设置保存成功: ${key} = ${value}`);
       return true;
     } catch (error) {
@@ -481,7 +511,7 @@ class DatabaseService {
       const [results] = await this.database.executeSql(`
         SELECT setting_value, setting_type FROM user_settings WHERE setting_key = ?
       `, [key]);
-      
+
       if (results.rows.length > 0) {
         const item = results.rows.item(0);
         try {
@@ -491,7 +521,7 @@ class DatabaseService {
           return item.setting_value;
         }
       }
-      
+
       return defaultValue;
     } catch (error) {
       console.error('获取设置失败:', error);
@@ -505,7 +535,7 @@ class DatabaseService {
       const [results] = await this.database.executeSql(`
         SELECT setting_key, setting_value, setting_type FROM user_settings
       `);
-      
+
       const settings = {};
       for (let i = 0; i < results.rows.length; i++) {
         const item = results.rows.item(i);
@@ -515,7 +545,7 @@ class DatabaseService {
           settings[item.setting_key] = item.setting_value;
         }
       }
-      
+
       return settings;
     } catch (error) {
       console.error('获取所有设置失败:', error);
@@ -529,7 +559,7 @@ class DatabaseService {
       await this.database.executeSql(`
         DELETE FROM user_settings WHERE setting_key = ?
       `, [key]);
-      
+
       console.log(`设置删除成功: ${key}`);
       return true;
     } catch (error) {
@@ -542,14 +572,14 @@ class DatabaseService {
   async saveMultipleSettings(settings) {
     try {
       await this.database.executeSql('BEGIN TRANSACTION');
-      
+
       for (const [key, value] of Object.entries(settings)) {
         await this.database.executeSql(`
           INSERT OR REPLACE INTO user_settings (setting_key, setting_value, setting_type, updated_at)
           VALUES (?, ?, ?, CURRENT_TIMESTAMP)
         `, [key, JSON.stringify(value), typeof value]);
       }
-      
+
       await this.database.executeSql('COMMIT');
       console.log('批量保存设置成功');
       return true;
@@ -564,7 +594,7 @@ class DatabaseService {
   async initializeDefaultSettings() {
     try {
       console.log('开始初始化默认设置...');
-      
+
       const defaultSettings = {
         // 个人信息设置
         'profile.nickname': '用户名称',
@@ -572,14 +602,14 @@ class DatabaseService {
         'profile.avatar': 'https://via.placeholder.com/60',
         'profile.gender': '未设置',
         'profile.region': '未设置',
-        
+
         // 账号设置
         'account.sipAddress': '',
         'account.password': '',
         'account.autoLogin': false,
         'account.rememberPassword': false,
         'account.showOnlineStatus': true,
-        
+
         // 服务器设置
         'server.pcscfAddress': 'pcscf.freeims.net',
         'server.port': '4060',
@@ -587,7 +617,7 @@ class DatabaseService {
         'server.registrationTimeout': '3600',
         'server.keepAliveInterval': '30',
         'server.preset': 'freeims',
-        
+
         // 应用设置
         'app.language': 'zh-CN',
         'app.theme': 'light',
@@ -596,7 +626,7 @@ class DatabaseService {
         'app.soundEnabled': true,
         'app.vibrationEnabled': true,
         'app.showTimestamp': true,
-        
+
         // 隐私设置
         'privacy.readReceipts': true,
         'privacy.typingIndicator': true,
@@ -607,7 +637,7 @@ class DatabaseService {
       // 检查设置表中是否有数据
       const [settingsResult] = await this.database.executeSql('SELECT COUNT(*) as count FROM user_settings');
       const settingsCount = settingsResult.rows.item(0).count;
-      
+
       if (settingsCount === 0) {
         // 首次安装，保存所有默认设置
         console.log('首次安装，保存默认设置...');
@@ -625,7 +655,7 @@ class DatabaseService {
         }
         console.log('设置项检查完成');
       }
-      
+
     } catch (error) {
       console.error('初始化默认设置失败:', error);
       throw error;
@@ -638,7 +668,7 @@ class DatabaseService {
       if (!this.database) {
         return {
           status: 'disconnected',
-          error: '数据库未连接'
+          error: '数据库未连接',
         };
       }
 
@@ -652,7 +682,7 @@ class DatabaseService {
 
       // 检查各个表的信息
       const tableNames = ['chat_list', 'messages', 'user_settings'];
-      
+
       for (const tableName of tableNames) {
         try {
           // 检查表是否存在
@@ -660,37 +690,37 @@ class DatabaseService {
             "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
             [tableName]
           );
-          
+
           const tableExists = tableExistsResult[0].rows.length > 0;
           debugInfo.tables[tableName] = { exists: tableExists };
-          
+
           if (tableExists) {
             // 获取记录数
             const countResult = await this.database.executeSql(
               `SELECT COUNT(*) as count FROM ${tableName}`
             );
             debugInfo.tables[tableName].count = countResult[0].rows.item(0).count;
-            
+
             // 对于user_settings表，获取所有设置键
             if (tableName === 'user_settings') {
               const settingsResult = await this.database.executeSql(
                 'SELECT setting_key, setting_type FROM user_settings ORDER BY setting_key'
               );
-              
+
               debugInfo.tables[tableName].keys = [];
               for (let i = 0; i < settingsResult[0].rows.length; i++) {
                 const row = settingsResult[0].rows.item(i);
                 debugInfo.tables[tableName].keys.push({
                   key: row.setting_key,
-                  type: row.setting_type
+                  type: row.setting_type,
                 });
               }
             }
           }
         } catch (tableError) {
-          debugInfo.tables[tableName] = { 
-            exists: false, 
-            error: tableError.message 
+          debugInfo.tables[tableName] = {
+            exists: false,
+            error: tableError.message,
           };
         }
       }
@@ -704,7 +734,7 @@ class DatabaseService {
         'server.useSSL',
         'profile.nickname',
         'app.language',
-        'app.theme'
+        'app.theme',
       ];
 
       for (const key of keySettings) {
@@ -712,11 +742,11 @@ class DatabaseService {
           const value = await this.getSetting(key, null);
           debugInfo.settings[key] = {
             value: value,
-            hasValue: value !== null && value !== undefined && value !== ''
+            hasValue: value !== null && value !== undefined && value !== '',
           };
         } catch (settingError) {
           debugInfo.settings[key] = {
-            error: settingError.message
+            error: settingError.message,
           };
         }
       }
@@ -726,7 +756,7 @@ class DatabaseService {
       console.error('获取调试信息失败:', error);
       return {
         status: 'error',
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -740,13 +770,84 @@ class DatabaseService {
 
       await this.database.executeSql('DELETE FROM user_settings');
       console.log('所有设置已清空');
-      
+
       // 重新初始化默认设置
       await this.initializeDefaultSettings();
-      
+
       return true;
     } catch (error) {
       console.error('清空设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 通过SIP地址获取聊天ID
+  async getChatIdBySipAddress(sipAddress) {
+    try {
+      if (!this.database) {
+        await this.initDB();
+      }
+
+      const [results] = await this.database.executeSql(`
+        SELECT id FROM chat_list WHERE sip_address = ?
+      `, [sipAddress]);
+
+      if (results.rows.length > 0) {
+        return results.rows.item(0).id;
+      }
+      return null;
+    } catch (error) {
+      console.error('通过SIP地址获取聊天ID失败:', error);
+      return null;
+    }
+  }
+
+  // 创建新的聊天记录
+  async createChat(chatData) {
+    try {
+      if (!this.database) {
+        await this.initDB();
+      }
+
+      const { name, sip_address, avatar_url, last_message, last_message_time, unread_count, is_online, chat_type } = chatData;
+
+      const [result] = await this.database.executeSql(`
+        INSERT INTO chat_list (name, sip_address, avatar_url, last_message, last_message_time, unread_count, is_online, chat_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [name, sip_address, avatar_url, last_message, last_message_time, unread_count, is_online, chat_type]);
+
+      return result.insertId;
+    } catch (error) {
+      console.error('创建聊天记录失败:', error);
+      throw error;
+    }
+  }
+
+  // 通过好友SIP地址获取或创建聊天
+  async getOrCreateChatBySipAddress(sipAddress, friendName, avatar = '') {
+    try {
+      // 先尝试获取现有聊天
+      let chatId = await this.getChatIdBySipAddress(sipAddress);
+
+      // 如果不存在，创建新的聊天记录
+      if (!chatId) {
+        const chatData = {
+          name: friendName,
+          sip_address: sipAddress,
+          avatar_url: avatar,
+          last_message: '',
+          last_message_time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+          unread_count: 0,
+          is_online: 0,
+          chat_type: 'private',
+        };
+
+        chatId = await this.createChat(chatData);
+      }
+
+      return chatId;
+    } catch (error) {
+      console.error('获取或创建聊天失败:', error);
       throw error;
     }
   }

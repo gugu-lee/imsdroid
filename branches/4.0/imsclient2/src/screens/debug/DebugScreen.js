@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { NativeModules } from 'react-native';
-import { DatabaseService } from '../services/DatabaseService';
+import { DatabaseService } from '../../services/DatabaseService';
 
 const { SettingsDbModule } = NativeModules;
 
@@ -22,15 +22,15 @@ const DebugScreen = ({ navigation }) => {
     try {
       setLoading(true);
       console.log('Loading debug info...');
-      
+
       // 获取Java端数据库信息
       const javaDebugInfo = await SettingsDbModule.getDebugInfo();
       console.log('Java debug info:', javaDebugInfo);
-      
+
       // 获取JavaScript端数据库信息
       const jsDbInfo = await DatabaseService.getDebugInfo();
       console.log('JS debug info:', jsDbInfo);
-      
+
       setDebugInfo({
         java: javaDebugInfo,
         javascript: jsDbInfo,
@@ -59,10 +59,10 @@ const DebugScreen = ({ navigation }) => {
       // 测试写入和读取
       const testKey = 'debug.test';
       const testValue = `测试值 ${Date.now()}`;
-      
+
       await DatabaseService.saveSetting(testKey, testValue);
       const retrievedValue = await DatabaseService.getSetting(testKey);
-      
+
       if (retrievedValue === testValue) {
         Alert.alert('测试成功', '数据库连接正常，读写操作成功');
       } else {
@@ -97,7 +97,7 @@ const DebugScreen = ({ navigation }) => {
   };
 
   const renderDebugSection = (title, data) => {
-    if (!data) return null;
+    if (!data) {return null;}
 
     return (
       <View style={styles.section}>
