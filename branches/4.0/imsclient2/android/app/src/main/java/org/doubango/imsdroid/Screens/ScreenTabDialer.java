@@ -20,6 +20,7 @@
 package org.doubango.imsdroid.Screens;
 
 import com.imsclient2.R;
+import org.doubango.imsdroid.ReactNative.ReactNativeCallManager;
 import org.doubango.imsdroid.Utils.DialerUtils;
 import org.doubango.ngn.media.NgnMediaType;
 import org.doubango.ngn.services.INgnSipService;
@@ -166,13 +167,15 @@ public class ScreenTabDialer  extends BaseScreen {
 			}
 			else if(tag == DialerUtils.TAG_AUDIO_CALL){
 				if(mSipService.isRegistered() && !NgnStringUtils.isNullOrEmpty(number)){
-					ScreenAV.makeCall(number, NgnMediaType.Audio);
+					// 🎯 使用React Native通话界面替换原生ScreenAV
+					ReactNativeCallManager.makeAudioCall(number);
 					mEtNumber.setText(NgnStringUtils.emptyValue());
 				}
 			}
 			else if(tag == DialerUtils.TAG_VIDEO_CALL){
 				if(mSipService.isRegistered() && !NgnStringUtils.isNullOrEmpty(number)){
-					ScreenAV.makeCall(number, NgnMediaType.AudioVideo);
+					// 🎯 使用React Native通话界面替换原生ScreenAV
+					ReactNativeCallManager.makeVideoCall(number);
 					mEtNumber.setText(NgnStringUtils.emptyValue());
 				}
 			}

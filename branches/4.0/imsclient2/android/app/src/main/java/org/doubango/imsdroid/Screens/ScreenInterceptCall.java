@@ -20,6 +20,7 @@
 package org.doubango.imsdroid.Screens;
 
 import com.imsclient2.R;
+import org.doubango.imsdroid.ReactNative.ReactNativeCallManager;
 import org.doubango.ngn.media.NgnMediaType;
 
 import android.app.AlertDialog;
@@ -57,7 +58,8 @@ public class ScreenInterceptCall extends BaseScreen{
                 public void onClick(DialogInterface dialog, int whichButton) {
                 	switch (whichButton) {
                 	case 0:
-                		ScreenAV.makeCall(phone.trim(), NgnMediaType.Audio);
+                		// 🎯 使用React Native通话界面替换原生ScreenAV
+                		ReactNativeCallManager.makeAudioCall(phone.trim());
             			finish();
                 		break;
                 	case 1:

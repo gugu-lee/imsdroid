@@ -114,7 +114,34 @@ class MainActivity : ReactActivity() {
      */
     private fun handleCallRedirection() {
         try {
+            val action = intent.getStringExtra("action")
             val initialRoute = intent.getStringExtra("initialRoute")
+            
+            // 🎯 处理ScreenAV直接启动的通话（新的主要方式）
+            if (action == "incoming_call" || action == "outgoing_call") {
+                val sessionId = intent.getStringExtra("sessionId") ?: ""
+                val remoteUri = intent.getStringExtra("remoteUri") ?: ""
+                val mediaType = intent.getStringExtra("mediaType") ?: "Audio"
+                val direction = if (action == "incoming_call") "incoming" else "outgoing"
+                val callType = if (mediaType.contains("Video", true)) "video" else "audio"
+                
+                Log.d("MainActivity", "🎯 ScreenAV直接启动: action=$action, sessionId=$sessionId, remoteUri=$remoteUri, mediaType=$mediaType")
+                
+                // 🎯 将参数传递给React Native
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    try {
+                        // 通过CallModule发送事件给React Native
+                        CallModule.handleScreenAVLaunch(action, sessionId, remoteUri, mediaType)
+                        Log.d("MainActivity", "✅ 已通过CallModule发送ReactNativeCallManager启动事件")
+                        
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "❌ 处理ReactNativeCallManager启动参数失败", e)
+                    }
+                }, 500)
+                return
+            }
+            
+            // 🎯 处理原有的重定向方式（向后兼容）
             if (initialRoute == "InCall") {
                 val callType = intent.getStringExtra("callType") ?: "audio"
                 val contactName = intent.getStringExtra("contactName") ?: "Unknown"

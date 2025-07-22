@@ -27,6 +27,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import org.doubango.imsdroid.Engine;
+import org.doubango.imsdroid.ReactNative.ReactNativeCallManager;
 import com.imsclient2.R;
 import org.doubango.imsdroid.Utils.DateTimeUtils;
 import org.doubango.ngn.NgnEngine;
@@ -113,7 +114,8 @@ private InputMethodManager mInputMethodManager;
 			public void onClick(View v) {
 				if(mSipService.isRegistered()){
 					if(!NgnStringUtils.isNullOrEmpty(sRemoteParty)){
-						ScreenAV.makeCall(sRemoteParty, NgnMediaType.Audio);
+						// 🎯 使用React Native通话界面替换原生ScreenAV
+						ReactNativeCallManager.makeAudioCall(sRemoteParty);
 					}
 				}
 			}
@@ -123,7 +125,8 @@ private InputMethodManager mInputMethodManager;
 			public void onClick(View v) {
 				if(mSipService.isRegistered()){
 					if(!NgnStringUtils.isNullOrEmpty(sRemoteParty)){
-						ScreenAV.makeCall(sRemoteParty, NgnMediaType.AudioVideo);
+						// 🎯 使用React Native通话界面替换原生ScreenAV
+						ReactNativeCallManager.makeVideoCall(sRemoteParty);
 					}
 				}
 			}

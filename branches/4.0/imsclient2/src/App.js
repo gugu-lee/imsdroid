@@ -71,7 +71,67 @@ const App = () => {
       }
     });
 
-    // 🎯 设置原生重定向事件监听
+    // 🎯 设置ReactNativeCallManager直接启动监听（主要方式）
+    DeviceEventEmitter.addListener('onReactNativeCallLaunch', (launchData) => {
+      console.log('🎯 收到ReactNativeCallManager直接启动事件:', launchData);
+      
+      if (navigationRef.current) {
+        const { action, sessionId, remoteUri, mediaType } = launchData;
+        const callType = mediaType?.toLowerCase().includes('video') ? 'video' : 'audio';
+        
+        if (action === 'incoming_call') {
+          // ReactNativeCallManager直接启动来电界面
+          navigationRef.current.navigate('IncomingCall', {
+            callerName: remoteUri || '未知来电',
+            sipAddress: remoteUri,
+            callType: callType,
+            callId: sessionId,
+            sessionId: sessionId
+          });
+        } else if (action === 'outgoing_call') {
+          // ReactNativeCallManager直接启动拨出界面
+          navigationRef.current.navigate('InCall', {
+            callType: callType,
+            contactName: remoteUri || '未知联系人',
+            sipAddress: remoteUri,
+            direction: 'outgoing',
+            sessionId: sessionId
+          });
+        }
+      }
+    });
+
+    // 🎯 设置ScreenAV直接启动监听（兼容模式）
+    DeviceEventEmitter.addListener('onScreenAVCallLaunch', (launchData) => {
+      console.log('🎯 收到ScreenAV直接启动事件:', launchData);
+      
+      if (navigationRef.current) {
+        const { action, sessionId, remoteUri, mediaType } = launchData;
+        const callType = mediaType?.toLowerCase().includes('video') ? 'video' : 'audio';
+        
+        if (action === 'incoming_call') {
+          // ScreenAV直接启动来电界面
+          navigationRef.current.navigate('IncomingCall', {
+            callerName: remoteUri || '未知来电',
+            sipAddress: remoteUri,
+            callType: callType,
+            callId: sessionId,
+            sessionId: sessionId
+          });
+        } else if (action === 'outgoing_call') {
+          // ScreenAV直接启动拨出界面
+          navigationRef.current.navigate('InCall', {
+            callType: callType,
+            contactName: remoteUri || '未知联系人',
+            sipAddress: remoteUri,
+            direction: 'outgoing',
+            sessionId: sessionId
+          });
+        }
+      }
+    });
+
+    // 🎯 设置原生重定向事件监听（向后兼容）
     DeviceEventEmitter.addListener('onNativeCallRedirect', (redirectData) => {
       console.log('🎯 收到原生通话重定向事件:', redirectData);
       

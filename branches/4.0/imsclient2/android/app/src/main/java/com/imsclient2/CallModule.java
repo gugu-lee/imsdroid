@@ -55,11 +55,10 @@ public class CallModule extends ReactContextBaseJavaModule {
             // 创建音频通话会话
             currentCall = NgnAVSession.createOutgoingSession(
                 sipService.getSipStack(), 
-                NgnMediaType.Audio, 
-                sipAddress
+                NgnMediaType.Audio
             );
 
-            if (currentCall != null && currentCall.makeCall()) {
+            if (currentCall != null && currentCall.makeCall(sipAddress)) {
                 // 注册到协调器
                 CallStateCoordinator.getInstance().registerCallSession(currentCall, "modern");
                 
@@ -101,11 +100,10 @@ public class CallModule extends ReactContextBaseJavaModule {
             // 创建视频通话会话
             currentCall = NgnAVSession.createOutgoingSession(
                 sipService.getSipStack(), 
-                NgnMediaType.AudioVideo, 
-                sipAddress
+                NgnMediaType.AudioVideo
             );
 
-            if (currentCall != null && currentCall.makeCall()) {
+            if (currentCall != null && currentCall.makeCall(sipAddress)) {
                 // 发送通话开始事件
                 sendCallEvent("onCallInitiated", sipAddress, "video", "outgoing");
                 
@@ -137,12 +135,7 @@ public class CallModule extends ReactContextBaseJavaModule {
             Log.d(TAG, "Answering call with video: " + withVideo);
             
             if (currentCall != null) {
-                boolean success;
-                if (withVideo) {
-                    success = currentCall.acceptCall(NgnMediaType.AudioVideo);
-                } else {
-                    success = currentCall.acceptCall(NgnMediaType.Audio);
-                }
+                boolean success = currentCall.acceptCall();
 
                 if (success) {
                     sendCallEvent("onCallAnswered", "", withVideo ? "video" : "audio", "incoming");
@@ -212,7 +205,7 @@ public class CallModule extends ReactContextBaseJavaModule {
             Log.d(TAG, "Rejecting call");
             
             if (currentCall != null) {
-                boolean success = currentCall.rejectCall();
+                boolean success = currentCall.hangUpCall(); // hangUpCall 可以用于拒绝来电
                 
                 if (success) {
                     sendCallEvent("onCallRejected", "", "", "incoming");
@@ -442,7 +435,8 @@ public class CallModule extends ReactContextBaseJavaModule {
             boolean isVideoCall = currentCall.getMediaType() == org.doubango.ngn.media.NgnMediaType.AudioVideo || 
                                 currentCall.getMediaType() == org.doubango.ngn.media.NgnMediaType.Video;
             String callType = isVideoCall ? "video" : "audio";
-            String direction = currentCall.isIncoming() ? "incoming" : "outgoing";
+            // 通过状态判断通话方向 - INCOMING状态表示来电
+            String direction = (currentCall.getState() == org.doubango.ngn.sip.NgnInviteSession.InviteState.INCOMING) ? "incoming" : "outgoing";
             String status = getCallStatus(currentCall.getState());
             
             // 发送接管成功事件
@@ -506,6 +500,44 @@ public class CallModule extends ReactContextBaseJavaModule {
         } catch (Exception e) {
             Log.e(TAG, "Error getting initial call params", e);
             promise.reject("PARAMS_ERROR", e.getMessage());
+        }
+    }
+    
+    /**
+     * 🎯 处理ReactNativeCallManager直接启动并发送事件到React Native
+     * @param action 操作类型 (incoming_call 或 outgoing_call)
+     * @param sessionId 会话ID
+     * @param remoteUri 远程URI
+     * @param mediaType 媒体类型
+     */
+    public static void handleScreenAVLaunch(String action, String sessionId, String remoteUri, String mediaType) {
+        try {
+            Log.d(TAG, "🎯 处理ReactNativeCallManager启动: action=" + action + ", sessionId=" + sessionId + ", remoteUri=" + remoteUri);
+            
+            // 获取React Context
+            MainApplication app = (MainApplication) MainApplication.getContext();
+            com.facebook.react.ReactInstanceManager reactInstanceManager = app.getReactNativeHost().getReactInstanceManager();
+            com.facebook.react.bridge.ReactContext reactContext = reactInstanceManager.getCurrentReactContext();
+            
+            if (reactContext != null && reactContext instanceof ReactApplicationContext) {
+                ReactApplicationContext appContext = (ReactApplicationContext) reactContext;
+                WritableMap params = Arguments.createMap();
+                params.putString("action", action);
+                params.putString("sessionId", sessionId);
+                params.putString("remoteUri", remoteUri);
+                params.putString("mediaType", mediaType);
+                
+                // 发送事件到React Native
+                appContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("onReactNativeCallLaunch", params);
+                    
+                Log.d(TAG, "✅ ReactNativeCallManager启动事件已发送到React Native");
+            } else {
+                Log.w(TAG, "⚠️ React Context为空，无法发送ReactNativeCallManager启动事件");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "❌ 发送ReactNativeCallManager启动事件失败", e);
         }
     }
 }

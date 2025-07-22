@@ -25,6 +25,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import com.imsclient2.R;
+import org.doubango.imsdroid.ReactNative.ReactNativeCallManager;
 import org.doubango.imsdroid.QuickAction.ActionItem;
 import org.doubango.imsdroid.QuickAction.QuickAction;
 import org.doubango.imsdroid.Utils.DateTimeUtils;
@@ -85,7 +86,8 @@ public class ScreenTabHistory extends BaseScreen {
 			@Override
 			public void onClick(View v) {
 				if(mSelectedEvent != null){
-					ScreenAV.makeCall(mSelectedEvent.getRemoteParty(), NgnMediaType.Audio);
+					// 🎯 使用React Native通话界面替换原生ScreenAV
+					ReactNativeCallManager.makeAudioCall(mSelectedEvent.getRemoteParty());
 					if(mLasQuickAction != null){
 						mLasQuickAction.dismiss();
 					}
@@ -99,7 +101,8 @@ public class ScreenTabHistory extends BaseScreen {
 			@Override
 			public void onClick(View v) {
 				if(mSelectedEvent != null){
-					ScreenAV.makeCall(mSelectedEvent.getRemoteParty(), NgnMediaType.AudioVideo);
+					// 🎯 使用React Native通话界面替换原生ScreenAV
+					ReactNativeCallManager.makeVideoCall(mSelectedEvent.getRemoteParty());
 					if(mLasQuickAction != null){
 						mLasQuickAction.dismiss();
 					}

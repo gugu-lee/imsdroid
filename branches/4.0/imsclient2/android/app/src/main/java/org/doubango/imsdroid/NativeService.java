@@ -20,6 +20,7 @@
 package org.doubango.imsdroid;
 
 import org.doubango.imsdroid.Screens.ScreenAV;
+import org.doubango.imsdroid.ReactNative.ReactNativeCallManager;
 import org.doubango.ngn.NgnNativeService;
 import org.doubango.ngn.events.NgnEventArgs;
 import org.doubango.ngn.events.NgnInviteEventArgs;
@@ -194,7 +195,8 @@ public class NativeService extends NgnNativeService {
 								final NgnAVSession avSession = NgnAVSession.getSession(args.getSessionId());
 								if(avSession != null){
 									mEngine.showAVCallNotif(R.drawable.phone_call_25, getString(R.string.string_call_incoming));
-									ScreenAV.receiveCall(avSession);
+									// 🎯 使用React Native通话界面替换原生ScreenAV
+									ReactNativeCallManager.receiveCall(avSession);
 									if(mWakeLock != null && !mWakeLock.isHeld()){
 										mWakeLock.acquire(10);
 									}

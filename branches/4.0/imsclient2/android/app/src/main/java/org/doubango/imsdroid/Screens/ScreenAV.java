@@ -29,7 +29,6 @@ import org.doubango.imsdroid.CustomDialog;
 import org.doubango.imsdroid.Engine;
 import org.doubango.imsdroid.IMSDroid;
 import org.doubango.imsdroid.Main;
-
 import com.imsclient2.MainApplication;
 import com.imsclient2.R;
 import org.doubango.imsdroid.Services.IScreenService;
@@ -157,78 +156,6 @@ public class ScreenAV extends BaseScreen{
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		
-		// 🎯 重定向到React Native现代化通话界面
-		Log.d(TAG, "Redirecting to modern React Native call interface");
-		redirectToModernUI();
-		return;
-	}
-	
-	/**
-	 * 重定向到现代化React Native通话界面
-	 */
-	private void redirectToModernUI() {
-		try {
-			super.mId = getIntent().getStringExtra("id");
-			if(NgnStringUtils.isNullOrEmpty(super.mId)){
-				Log.e(TAG, "Invalid audio/video session");
-				finish(); 
-				mScreenService.show(ScreenHome.class);
-				return;
-			}
-			
-			mAVSession = NgnAVSession.getSession(NgnStringUtils.parseLong(super.mId, -1));
-			if(mAVSession == null){
-				Log.e(TAG, String.format("Cannot find audio/video session with id=%s", super.mId));
-				finish(); 
-				mScreenService.show(ScreenHome.class);
-				return;
-			}
-			
-			// 获取通话信息
-			final NgnContact remoteParty = getEngine().getContactService().getContactByUri(mAVSession.getRemotePartyUri());
-			String remotePartyDisplayName = "Unknown";
-			if(remoteParty != null){
-				remotePartyDisplayName = remoteParty.getDisplayName();
-			} else {
-				remotePartyDisplayName = NgnUriUtils.getDisplayName(mAVSession.getRemotePartyUri());
-			}
-			if(NgnStringUtils.isNullOrEmpty(remotePartyDisplayName)){
-				remotePartyDisplayName = "Unknown";
-			}
-			
-			boolean isVideoCall = mAVSession.getMediaType() == NgnMediaType.AudioVideo || mAVSession.getMediaType() == NgnMediaType.Video;
-			String callType = isVideoCall ? "video" : "audio";
-			String direction = mAVSession.isIncoming() ? "incoming" : "outgoing";
-			
-			// 启动React Native通话界面
-			Intent intent = new Intent();
-			intent.setClassName(getPackageName(), "com.imsclient2.MainActivity");
-			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-			intent.putExtra("initialRoute", "InCall");
-			intent.putExtra("callType", callType);
-			intent.putExtra("contactName", remotePartyDisplayName);
-			intent.putExtra("sipAddress", mAVSession.getRemotePartyUri());
-			intent.putExtra("direction", direction);
-			intent.putExtra("sessionId", super.mId);
-			
-			startActivity(intent);
-			finish();
-			
-			Log.d(TAG, "Successfully redirected to modern UI with params: " + 
-				"callType=" + callType + ", direction=" + direction + ", contactName=" + remotePartyDisplayName);
-			
-		} catch (Exception e) {
-			Log.e(TAG, "Failed to redirect to modern UI", e);
-			// 如果重定向失败，显示错误并关闭
-			finish();
-			mScreenService.show(ScreenHome.class);
-		}
-	}
-	
-	// 保留原有onCreate逻辑作为备用（已废弃）
-	private void legacyOnCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.screen_av);
 		

@@ -25,6 +25,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import org.doubango.imsdroid.Engine;
+import org.doubango.imsdroid.ReactNative.ReactNativeCallManager;
 import com.imsclient2.R;
 import org.doubango.imsdroid.QuickAction.ActionItem;
 import org.doubango.imsdroid.QuickAction.QuickAction;
@@ -87,7 +88,8 @@ public class ScreenTabContacts extends BaseScreen {
 			@Override
 			public void onClick(View v) {
 				if(mSelectedContact != null){
-					ScreenAV.makeCall(mSelectedContact.getPrimaryNumber(), NgnMediaType.Audio);
+					// 🎯 使用React Native通话界面替换原生ScreenAV
+					ReactNativeCallManager.makeAudioCall(mSelectedContact.getPrimaryNumber());
 					if(mLasQuickAction != null){
 						mLasQuickAction.dismiss();
 					}
@@ -101,7 +103,8 @@ public class ScreenTabContacts extends BaseScreen {
 			@Override
 			public void onClick(View v) {
 				if(mSelectedContact != null){
-					ScreenAV.makeCall(mSelectedContact.getPrimaryNumber(), NgnMediaType.AudioVideo);
+					// 🎯 使用React Native通话界面替换原生ScreenAV
+					ReactNativeCallManager.makeVideoCall(mSelectedContact.getPrimaryNumber());
 					if(mLasQuickAction != null){
 						mLasQuickAction.dismiss();
 					}
