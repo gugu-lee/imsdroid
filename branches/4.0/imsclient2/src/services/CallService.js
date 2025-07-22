@@ -78,6 +78,40 @@ class CallService {
   }
 
   /**
+   * 🎯 接管原生通话会话
+   * @param {string} sessionId - 原生会话ID
+   * @returns {Promise}
+   */
+  async takeoverCall(sessionId) {
+    try {
+      if (!CallModule) {
+        throw new Error('CallModule 不可用');
+      }
+
+      console.log('正在接管原生会话:', sessionId);
+      
+      // 调用原生方法接管会话
+      const result = await CallModule.takeoverCall(sessionId);
+      
+      this.currentCall = {
+        callId: result.callId || sessionId,
+        sipAddress: result.sipAddress || 'unknown',
+        callType: result.callType || 'audio',
+        direction: result.direction || 'unknown',
+        startTime: new Date(),
+        status: result.status || 'active',
+        fromNative: true // 标记来自原生重定向
+      };
+
+      console.log('成功接管原生通话会话:', this.currentCall);
+      return result;
+    } catch (error) {
+      console.error('接管原生通话会话失败:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 发起视频通话
    * @param {string} sipAddress - 目标SIP地址
    * @param {object} options - 通话选项

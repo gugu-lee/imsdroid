@@ -68,6 +68,9 @@ class MainActivity : ReactActivity() {
         super.onCreate(null)
         // 你的初始化代码
 
+        // 🎯 处理来自原生代码的通话重定向
+        handleCallRedirection()
+
         // 注册广播接收器，兼容低版本
         val filter = IntentFilter(ACTION_CUSTOM_BROADCAST)
         if (Build.VERSION.SDK_INT >= 26) {
@@ -104,6 +107,43 @@ class MainActivity : ReactActivity() {
 
         mEngine!!.mainActivity = this
 
+    }
+    
+    /**
+     * 处理来自原生代码的通话重定向
+     */
+    private fun handleCallRedirection() {
+        try {
+            val initialRoute = intent.getStringExtra("initialRoute")
+            if (initialRoute == "InCall") {
+                val callType = intent.getStringExtra("callType") ?: "audio"
+                val contactName = intent.getStringExtra("contactName") ?: "Unknown"
+                val sipAddress = intent.getStringExtra("sipAddress") ?: ""
+                val direction = intent.getStringExtra("direction") ?: "outgoing"
+                val sessionId = intent.getStringExtra("sessionId") ?: ""
+                
+                Log.d("MainActivity", "🎯 Redirecting to InCall screen: callType=$callType, direction=$direction, contactName=$contactName, sessionId=$sessionId")
+                
+                // 🎯 发送重定向事件到React Native
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    try {
+                        val params = android.os.Bundle().apply {
+                            putString("callType", callType)
+                            putString("contactName", contactName)
+                            putString("sipAddress", sipAddress)
+                            putString("direction", direction)
+                            putString("sessionId", sessionId)
+                        }
+                        
+                        Log.d("MainActivity", "✅ 准备启动通话重定向")
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "❌ 处理重定向参数失败", e)
+                    }
+                }, 1000)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error handling call redirection", e)
+        }
     }
 
     override fun onStart() {

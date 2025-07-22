@@ -22,7 +22,8 @@ const InCallScreen = ({ route, navigation }) => {
     contactName = '未知联系人',
     sipAddress,
     friendId,
-    direction = 'outgoing'
+    direction = 'outgoing',
+    sessionId, // 🎯 从原生重定向传来的会话ID
   } = route.params || {};
 
   const [callState, setCallState] = useState(direction === 'outgoing' ? 'connecting' : 'ringing');
@@ -40,8 +41,15 @@ const InCallScreen = ({ route, navigation }) => {
     StatusBar.setBarStyle('light-content');
     StatusBar.setBackgroundColor('#000000');
 
-    // 设置通话事件监听
-    setupCallListeners();
+    // 🎯 检查是否从原生重定向而来
+    if (sessionId) {
+      console.log('从原生界面重定向到现代化UI，会话ID:', sessionId);
+      // 接管现有的通话会话
+      takeoverNativeCall(sessionId);
+    } else {
+      // 设置正常的通话事件监听
+      setupCallListeners();
+    }
 
     // 阻止返回按钮
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -60,7 +68,7 @@ const InCallScreen = ({ route, navigation }) => {
       StatusBar.setBarStyle('dark-content');
       StatusBar.setBackgroundColor('#ffffff');
     };
-  }, []);
+  }, [sessionId]);
 
   const setupCallListeners = () => {
     callService.addEventListener('callStateChanged', handleCallStateChanged);
@@ -68,6 +76,34 @@ const InCallScreen = ({ route, navigation }) => {
     callService.addEventListener('callEnded', handleCallEnded);
     callService.addEventListener('muteChanged', handleMuteChanged);
     callService.addEventListener('speakerChanged', handleSpeakerChanged);
+  };
+
+  /**
+   * 🎯 接管原生通话会话
+   */
+  const takeoverNativeCall = async (nativeSessionId) => {
+    try {
+      console.log('接管原生通话会话:', nativeSessionId);
+      
+      // 设置事件监听
+      setupCallListeners();
+      
+      // 通知CallService接管现有会话
+      await callService.takeoverCall(nativeSessionId);
+      
+      // 根据传入的direction设置初始状态
+      if (direction === 'incoming') {
+        setCallState('ringing');
+      } else {
+        setCallState('connecting');
+      }
+      
+      console.log('成功接管原生通话会话');
+    } catch (error) {
+      console.error('接管原生通话会话失败:', error);
+      Alert.alert('错误', '无法接管通话会话');
+      navigation.goBack();
+    }
   };
 
   const cleanupCall = () => {

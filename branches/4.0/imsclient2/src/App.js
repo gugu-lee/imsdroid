@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NativeModules, Alert } from 'react-native';
+import { NativeModules, Alert, DeviceEventEmitter } from 'react-native';
 import HomeScreen from './screens/HomeScreen';
 import ChatDetailScreen from './screens/chat/ChatDetailScreen';
 import SettingsScreen from './screens/settings/SettingsScreen';
@@ -27,13 +27,33 @@ import ConfigValidationService from './services/ConfigValidationService';
 import { StartupService } from './services/StartupService';
 import callService from './services/CallService';
 
-const { LoginModule } = NativeModules;
+const { LoginModule, CallModule } = NativeModules;
 const Stack = createStackNavigator();
 
 const App = () => {
   const navigationRef = useRef();
   const [initialRoute, setInitialRoute] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [initialParams, setInitialParams] = useState({});
+
+  // 🎯 检查是否从原生代码重定向而来
+  const checkNativeRedirection = async () => {
+    try {
+      // 检查是否有来自原生的重定向参数
+      if (CallModule && CallModule.getInitialCallParams) {
+        const params = await CallModule.getInitialCallParams();
+        if (params && params.initialRoute === 'InCall') {
+          console.log('🎯 检测到来自原生的通话重定向:', params);
+          setInitialRoute('InCall');
+          setInitialParams(params);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.log('检查原生重定向失败:', error);
+    }
+    return false;
+  };
 
   // 设置来电监听器
   const setupIncomingCallListener = () => {
@@ -50,6 +70,21 @@ const App = () => {
         });
       }
     });
+
+    // 🎯 设置原生重定向事件监听
+    DeviceEventEmitter.addListener('onNativeCallRedirect', (redirectData) => {
+      console.log('🎯 收到原生通话重定向事件:', redirectData);
+      
+      if (navigationRef.current) {
+        navigationRef.current.navigate('InCall', {
+          callType: redirectData.callType || 'audio',
+          contactName: redirectData.contactName || '未知联系人',
+          sipAddress: redirectData.sipAddress,
+          direction: redirectData.direction || 'outgoing',
+          sessionId: redirectData.sessionId
+        });
+      }
+    });
   };
 
   useEffect(() => {
@@ -63,6 +98,14 @@ const App = () => {
     const initializeApplication = async () => {
       try {
         console.log('🚀 应用启动初始化开始...');
+
+        // 🎯 首先检查是否有原生重定向
+        const hasRedirection = await checkNativeRedirection();
+        if (hasRedirection) {
+          console.log('🎯 使用原生重定向路由，跳过正常初始化');
+          setIsInitializing(false);
+          return;
+        }
 
         // 初始化数据库
         await initializeApp();
@@ -313,10 +356,11 @@ const App = () => {
             }}
           />
           
-          {/* 音视频通话页面 */}
+          {/* 🎯 音视频通话页面 */}
           <Stack.Screen
             name="InCall"
             component={InCallScreen}
+            initialParams={initialParams} // 支持原生重定向参数
             options={{
               headerShown: false,
               gestureEnabled: false, // 禁用手势返回

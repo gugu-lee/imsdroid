@@ -60,6 +60,9 @@ public class CallModule extends ReactContextBaseJavaModule {
             );
 
             if (currentCall != null && currentCall.makeCall()) {
+                // 注册到协调器
+                CallStateCoordinator.getInstance().registerCallSession(currentCall, "modern");
+                
                 // 发送通话开始事件
                 sendCallEvent("onCallInitiated", sipAddress, "audio", "outgoing");
                 
@@ -403,6 +406,106 @@ public class CallModule extends ReactContextBaseJavaModule {
         // 如果通话结束，清理当前会话
         if ("terminated".equals(state) || "failed".equals(state)) {
             currentCall = null;
+        }
+    }
+    
+    /**
+     * 🎯 接管原生通话会话
+     * @param sessionId 原生会话ID
+     * @param promise Promise回调
+     */
+    @ReactMethod
+    public void takeoverCall(String sessionId, Promise promise) {
+        try {
+            Log.d(TAG, "Taking over native call session: " + sessionId);
+            
+            if (sessionId == null || sessionId.isEmpty()) {
+                promise.reject("INVALID_SESSION", "无效的会话ID");
+                return;
+            }
+            
+            // 获取现有的原生会话
+            long sessionIdLong = Long.parseLong(sessionId);
+            NgnAVSession existingSession = NgnAVSession.getSession(sessionIdLong);
+            
+            if (existingSession == null) {
+                promise.reject("SESSION_NOT_FOUND", "找不到指定的会话");
+                return;
+            }
+            
+            // 接管会话
+            currentCall = existingSession;
+            currentCall.incRef(); // 增加引用计数
+            
+            // 获取会话信息
+            String remoteUri = currentCall.getRemotePartyUri();
+            boolean isVideoCall = currentCall.getMediaType() == org.doubango.ngn.media.NgnMediaType.AudioVideo || 
+                                currentCall.getMediaType() == org.doubango.ngn.media.NgnMediaType.Video;
+            String callType = isVideoCall ? "video" : "audio";
+            String direction = currentCall.isIncoming() ? "incoming" : "outgoing";
+            String status = getCallStatus(currentCall.getState());
+            
+            // 发送接管成功事件
+            sendCallEvent("onCallTakeover", remoteUri, callType, direction);
+            
+            WritableMap result = Arguments.createMap();
+            result.putString("status", "success");
+            result.putString("callId", sessionId);
+            result.putString("sipAddress", remoteUri);
+            result.putString("callType", callType);
+            result.putString("direction", direction);
+            result.putString("callStatus", status);
+            promise.resolve(result);
+            
+            Log.d(TAG, "Successfully took over native call session: " + sessionId);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error taking over native call", e);
+            promise.reject("TAKEOVER_ERROR", e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取通话状态字符串
+     */
+    private String getCallStatus(org.doubango.ngn.sip.NgnInviteSession.InviteState state) {
+        switch (state) {
+            case NONE:
+                return "none";
+            case INCOMING:
+                return "incoming";
+            case INPROGRESS:
+                return "connecting";
+            case REMOTE_RINGING:
+                return "ringing";
+            case EARLY_MEDIA:
+                return "early_media";
+            case INCALL:
+                return "active";
+            case TERMINATING:
+                return "terminating";
+            case TERMINATED:
+                return "terminated";
+            default:
+                return "unknown";
+        }
+    }
+    
+    /**
+     * 🎯 获取初始通话参数（用于原生重定向）
+     * @param promise Promise回调
+     */
+    @ReactMethod
+    public void getInitialCallParams(Promise promise) {
+        try {
+            // 这个方法主要用于兼容性，实际参数会通过Intent传递
+            WritableMap result = Arguments.createMap();
+            result.putString("status", "no_params");
+            result.putString("message", "No initial call parameters available");
+            promise.resolve(result);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting initial call params", e);
+            promise.reject("PARAMS_ERROR", e.getMessage());
         }
     }
 }
