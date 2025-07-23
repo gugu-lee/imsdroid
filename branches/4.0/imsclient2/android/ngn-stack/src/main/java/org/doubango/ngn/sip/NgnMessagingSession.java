@@ -25,6 +25,7 @@ import org.doubango.ngn.utils.NgnContentType;
 import org.doubango.ngn.utils.NgnObservableHashMap;
 import org.doubango.ngn.utils.NgnStringUtils;
 import org.doubango.ngn.utils.NgnUriUtils;
+import org.doubango.tinyWRAP.ActionConfig;
 import org.doubango.tinyWRAP.MessagingSession;
 import org.doubango.tinyWRAP.RPMessage;
 import org.doubango.tinyWRAP.SMSEncoder;
@@ -187,7 +188,16 @@ public class NgnMessagingSession extends NgnSipSession {
      */
     public boolean accept() {
         return mSession.accept();
-      }
+    }
+
+    /**
+     * Accepts the message with custom action configuration (sends 200 OK with custom headers).
+     * @param config ActionConfig containing custom response configuration
+     * @return true if succeed and false otherwise
+     */
+    public boolean accept(ActionConfig config) {
+        return mSession.accept(config);
+    }
 
     /**
      * Reject the message (sends 603 Decline)

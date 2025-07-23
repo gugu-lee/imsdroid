@@ -32,20 +32,6 @@ class MainActivity : ReactActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
     }
-    private val ACTION_CUSTOM_BROADCAST = NgnMessagingEventArgs.ACTION_MESSAGING_EVENT
-    private val EXTRA_MSG = "message"
-    private val receiver =  MyDynamicReceiver() // 创建动态接收器实例
-//        object : BroadcastReceiver() {
-//        override fun onReceive(context: Context?, intent: Intent?) {
-//            if (intent?.action == ACTION_CUSTOM_BROADCAST) {
-//                val msg = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE)
-//                Log.d("MainActivity", "收到自定义广播: $msg")
-//                val embedded = intent.getParcelableExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED,NgnMessagingEventArgs.class.java)
-//                val msg1 = (embedded as? NgnMessagingEventArgs)?.getPayload()
-//                Log.d("MainActivity", "收到短信: $msg1.")
-//            }
-//        }
-//    }
 
     /**
      * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -70,15 +56,6 @@ class MainActivity : ReactActivity() {
 
         // 🎯 处理来自原生代码的通话重定向
         handleCallRedirection()
-
-        // 注册广播接收器，兼容低版本
-        val filter = IntentFilter(ACTION_CUSTOM_BROADCAST)
-        if (Build.VERSION.SDK_INT >= 26) {
-            registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(receiver, filter)
-        }
-
 
         // 启动服务（适配 Android 8.0+）
 //        val serviceIntent = Intent(

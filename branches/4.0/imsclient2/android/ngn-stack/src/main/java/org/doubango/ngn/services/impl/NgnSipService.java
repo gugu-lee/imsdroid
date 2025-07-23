@@ -59,6 +59,7 @@ import org.doubango.ngn.utils.NgnDateTimeUtils;
 import org.doubango.ngn.utils.NgnStringUtils;
 import org.doubango.ngn.utils.NgnUriUtils;
 import org.doubango.ngn.utils.NgnSettingsDbHelper;
+import org.doubango.tinyWRAP.ActionConfig;
 import org.doubango.tinyWRAP.CallSession;
 import org.doubango.tinyWRAP.DDebugCallback;
 import org.doubango.tinyWRAP.DialogEvent;
@@ -961,6 +962,10 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
                             session.delete();
                             return 0;
                         }
+                        
+                        // Note: 180 Ringing response is typically sent automatically by the SIP stack
+                        Log.d(TAG, "Incoming MSRP session created: " + msrpSession.getId());
+                        
                         mSipService.broadcastInviteEvent(new NgnInviteEventArgs(msrpSession.getId(), NgnInviteEventTypes.INCOMING, msrpSession.getMediaType(), phrase));
                     }
                     else if ((sessionType == twrap_media_type_t.twrap_media_audio) ||
@@ -975,7 +980,11 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
                                 return -1;
                             }
                             final NgnInviteEventTypes eType = type == tsip_invite_event_type_t.tsip_i_newcall ? NgnInviteEventTypes.INCOMING : NgnInviteEventTypes.REMOTE_TRANSFER_INPROGESS;
-                            final NgnAVSession avSession = NgnAVSession.takeIncomingSession(mSipService.getSipStack(), (CallSession)session, sessionType, message); 
+                            final NgnAVSession avSession = NgnAVSession.takeIncomingSession(mSipService.getSipStack(), (CallSession)session, sessionType, message);
+                            
+                            // Note: 180 Ringing response is typically sent automatically by the SIP stack
+                            Log.d(TAG, "Incoming AV session created: " + avSession.getId());
+                             
                             mSipService.broadcastInviteEvent(new NgnInviteEventArgs(avSession.getId(), eType, avSession.getMediaType(), phrase));
                         }
 
@@ -1226,8 +1235,18 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 				}
 				imSession = NgnMessagingSession.takeIncomingSession(
 						mSipService.mSipStack, _session, message);
+				if (imSession == null) {
+					Log.e(TAG, "Failed to create NgnMessagingSession");
+					return -1;
+				}
+				
 				if (message == null) {
-					imSession.reject();
+					Log.w(TAG, "SIP MESSAGE is null, rejecting session");
+					if (imSession.reject()) {
+						Log.d(TAG, "603 Decline sent for null MESSAGE session: " + imSession.getId());
+					} else {
+						Log.w(TAG, "Failed to send 603 Decline for null MESSAGE session: " + imSession.getId());
+					}
 					imSession.decRef();
 					return 0;
 				}
@@ -1238,13 +1257,34 @@ public class NgnSipService extends NgnBaseService implements INgnSipService,
 				byte[] content = null;
 
 				if (bytes == null || bytes.length == 0) {
-					Log.e(NgnSipService.TAG, "Invalid MESSAGE");
-					imSession.reject();
+					Log.w(TAG, "MESSAGE content is empty, rejecting session");
+					if (imSession.reject()) {
+						Log.d(TAG, "603 Decline sent for empty MESSAGE session: " + imSession.getId());
+					} else {
+						Log.w(TAG, "Failed to send 603 Decline for empty MESSAGE session: " + imSession.getId());
+					}
 					imSession.decRef();
 					return 0;
 				}
 
-				imSession.accept();
+				Log.d(TAG, "Processing MESSAGE with content length: " + bytes.length + ", contentType: " + contentType);
+
+				// 显式创建 ActionConfig 并发送 200 OK 响应
+				ActionConfig actionConfig = new ActionConfig();
+				actionConfig.setResponseLine((short) 200, "OK");
+				actionConfig.addHeader("Content-Length", "0");
+				
+				// 发送 200 OK 响应给服务端 - 必须在处理内容之前发送
+				boolean acceptResult = imSession.accept(actionConfig);
+				Log.d(TAG, "MESSAGE session explicit 200 OK accept() result: " + acceptResult + " for session: " + imSession.getId());
+				if (acceptResult) {
+					Log.d(TAG, "Explicit 200 OK response sent for MESSAGE session: " + imSession.getId());
+				} else {
+					Log.w(TAG, "Failed to send explicit 200 OK response for MESSAGE session: " + imSession.getId());
+				}
+				
+				// 清理 ActionConfig 资源
+				actionConfig.delete();
 
 				if (NgnStringUtils.equals(contentType, NgnContentType.SMS_3GPP,
 						true)) {
