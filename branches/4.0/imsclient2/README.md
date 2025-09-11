@@ -7,11 +7,17 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 ## Step 0: Env for deploper
 
 JDK: 17;
+
 Android Studio: 2024
+
 Android SDK:min 9
+
 NDK:27
+
 Node:v22.18.0
+
 NPM:10.9.3
+
 NPX:10.9.3
 
 ## Step 1: Start Metro
