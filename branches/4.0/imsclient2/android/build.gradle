@@ -1,22 +1,7 @@
-
-// def nodePath = new File(["which", "node"].execute().text.trim())
-// def npxPath = new File(["which", "npx"].execute().text.trim())
-
-// project.ext.react = [
-//     // 使用绝对路径
-//     nodeExecutableAndArgs: [nodePath.absolutePath],
-//     command: npxPath.absolutePath,
-//     cliPath: "../node_modules/@react-native-community/cli/build/bin.js",
-    
-//     // 添加环境变量
-//     extraPackagerArgs: ["--max-workers=4"],
-//     bundleConfig: "metro.config.js"
-// ]
-
-// // 打印调试信息
-// println "Node路径: ${nodePath.absolutePath}"
-// println "NPX路径: ${npxPath.absolutePath}"
-// println "CLI路径存在: ${new File(project.ext.react.cliPath).exists()}"
+// 指定 Node.js 路径，解决 Android Studio 中找不到 node 的问题
+project.ext.react = [
+    nodeExecutableAndArgs: ["/usr/local/bin/node"]
+]
 
 buildscript {
     ext {
@@ -41,3 +26,7 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// JDK 指定请使用 android/local.properties 中的 org.gradle.java.home，或在 shell 中通过 JAVA_HOME 导出后运行 Gradle。
+// 在 build.gradle 中修改 JVM 是无效的（构建脚本编译阶段已在 JVM 启动时确定）。
+// 如果更改了 JDK，请在命令行执行 ./gradlew --stop 然后重新运行构建以重启 Gradle 守护进程。

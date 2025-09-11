@@ -24,6 +24,9 @@ With Metro running, open a new terminal window/pane from the root of your React 
 
 ### Android
 
+在macOS系统下，Android Studio环境下，编译运行调试时可能会出现 node,npx运行失败。可能是原因是此环境下没有正确导入PATH环境变量。一种解决办法时通过命令行启动Android Studio。
+open -a /Applications/Android\ Studio.app
+
 ```sh
 # Using npm
 npm run android
