@@ -4,6 +4,16 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
+## Step 0: Env for deploper
+
+JDK: 17;
+Android Studio: 2024
+Android SDK:min 9
+NDK:27
+Node:v22.18.0
+NPM:10.9.3
+NPX:10.9.3
+
 ## Step 1: Start Metro
 
 First, you will need to run **Metro**, the JavaScript build tool for React Native.
@@ -25,6 +35,7 @@ With Metro running, open a new terminal window/pane from the root of your React 
 ### Android
 
 在macOS系统下，Android Studio环境下，编译运行调试时可能会出现 node,npx运行失败。可能是原因是此环境下没有正确导入PATH环境变量。一种解决办法时通过命令行启动Android Studio。
+
 open -a /Applications/Android\ Studio.app
 
 ```sh
