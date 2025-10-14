@@ -55,5 +55,11 @@ class MainApplication : NgnApplication(), ReactApplication {
 
         // 初始化 SQLite 数据库
         MessageDbHelper(this).writableDatabase.close()
+        
+        // 初始化消息通知管理器
+        MessageNotificationManager.getInstance(this)
+        
+        // 初始化外部消息管理器
+        ExternalMessageManager.getInstance(this)
     }
 }

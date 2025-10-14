@@ -48,6 +48,13 @@
 
     <!-- Android 13+ 通知权限 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- 振动权限 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- FCM 权限 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
     <application
       android:name=".MainApplication"
@@ -57,9 +64,15 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
-<!--        <service android:name=".NativeService" />-->
 
-<!--        <service android:name=".MyBroadcastService" android:foregroundServiceType="shortService" />-->
+        <!-- Firebase Cloud Messaging 服务 -->
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- 静态注册的广播接收器（如需接收系统广播） -->
         <receiver

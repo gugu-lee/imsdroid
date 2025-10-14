@@ -22,19 +22,19 @@ public class MyDynamicReceiver extends BroadcastReceiver {
             try {
                 String dateString = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_DATE);
                 Log.d(TAG, "收到自定义广播，时间: " + dateString);
-                
+
                 NgnMessagingEventArgs args = intent.getParcelableExtra(NgnMessagingEventArgs.EXTRA_EMBEDDED);
                 if (args != null) {
                     String messageText = new String(args.getPayload());
                     Log.d(TAG, "收到短信: " + messageText);
-                    
+
                     // 从Intent中获取发送者信息
                     String fromUser = intent.getStringExtra(NgnMessagingEventArgs.EXTRA_REMOTE_PARTY);
                     if (fromUser == null || fromUser.isEmpty()) {
                         fromUser = "未知用户"; // 默认发送者
                     }
                     Log.d(TAG, "发送者: " + fromUser);
-                    
+
                     // 生成或提取SIP地址（如果fromUser本身就是SIP地址格式，直接使用；否则生成）
                     String sipAddress = null;
                     if (fromUser.startsWith("sip:")) {
@@ -45,7 +45,7 @@ public class MyDynamicReceiver extends BroadcastReceiver {
                             fromUser = displayName;
                         }
                     }
-                    
+
                     // 获取消息时间戳
                     String timestamp = dateString;
                     if (timestamp == null || timestamp.isEmpty()) {
@@ -55,13 +55,20 @@ public class MyDynamicReceiver extends BroadcastReceiver {
                     } else {
                         Log.d(TAG, "使用消息原始时间戳: " + timestamp);
                     }
-                    
+
                     // 写入数据库，使用统一的数据库接口
-                    long chatId = UnifiedDatabaseModule.addChatFromNative(context, fromUser, messageText, timestamp, sipAddress);
-                    
+                    long chatId = UnifiedDatabaseModule.addChatFromNative(context, fromUser, messageText, timestamp,
+                            sipAddress);
+
                     if (chatId != -1) {
                         Log.d(TAG, "消息已保存到数据库，chatId: " + chatId);
-                        
+
+                        // 显示通知
+                        MessageNotificationManager notificationManager = MessageNotificationManager
+                                .getInstance(context);
+                        notificationManager.showMessageNotification(fromUser, messageText, fromUser);
+                        Log.d(TAG, "消息通知已显示");
+
                         // 通知React Native更新UI
                         MessageModule messageModule = MessageModule.getInstance();
                         if (messageModule != null) {
@@ -82,7 +89,7 @@ public class MyDynamicReceiver extends BroadcastReceiver {
             }
         }
     }
-    
+
     // 从SIP地址中提取用户名
     private String extractUserNameFromSip(String sipAddress) {
         try {
@@ -100,26 +107,12 @@ public class MyDynamicReceiver extends BroadcastReceiver {
             return null;
         }
     }
-    
+
     // 获取当前时间戳
     private String getCurrentTimeStamp() {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         return sdf.format(new Date());
     }
-
-    // 在 Activity/Fragment/Service 中注册和注销
-//    public static void register(Context context) {
-//        Log.i(TAG,"register receiver");
-//        MyDynamicReceiver receiver = new MyDynamicReceiver();
-//        IntentFilter filter = new IntentFilter(NgnMessagingEventArgs.ACTION_MESSAGING_EVENT);
-//
-//        // Android 12+ 需指定 RECEIVER_EXPORTED 或 RECEIVER_NOT_EXPORTED
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
-//        } else {
-//            context.registerReceiver(receiver, filter);
-//        }
-//    }
 
     public static void unregister(Context context, BroadcastReceiver receiver) {
         context.unregisterReceiver(receiver);

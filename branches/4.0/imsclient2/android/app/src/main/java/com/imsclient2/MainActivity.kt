@@ -56,6 +56,9 @@ class MainActivity : ReactActivity() {
 
         // 🎯 处理来自原生代码的通话重定向
         handleCallRedirection()
+        
+        // 处理通知点击
+        handleNotificationClick()
 
         // 启动服务（适配 Android 8.0+）
 //        val serviceIntent = Intent(
@@ -147,6 +150,33 @@ class MainActivity : ReactActivity() {
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error handling call redirection", e)
+        }
+    }
+    
+    /**
+     * 处理通知点击事件
+     */
+    private fun handleNotificationClick() {
+        try {
+            val openChat = intent.getBooleanExtra("openChat", false)
+            if (openChat) {
+                val fromUser = intent.getStringExtra("fromUser") ?: ""
+                
+                Log.d("MainActivity", "通知点击: 打开与 $fromUser 的聊天")
+                
+                // 延迟发送事件给React Native，确保React Native已初始化
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    try {
+                        val messageModule = MessageModule.getInstance()
+                        messageModule?.sendOpenChatEvent(fromUser)
+                        Log.d("MainActivity", "已发送打开聊天事件到React Native")
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "发送打开聊天事件失败", e)
+                    }
+                }, 1000)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "处理通知点击失败", e)
         }
     }
 
