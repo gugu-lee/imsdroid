@@ -185,4 +185,85 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             Log.e(TAG, "保存通知到数据库失败: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * 静态方法：初始化FCM Token（在Application启动时调用）
+     */
+    public static void initializeFcmToken(android.content.Context context) {
+        try {
+            Log.d(TAG, "开始初始化 FCM Token...");
+            
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new com.google.android.gms.tasks.OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(com.google.android.gms.tasks.Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "获取FCM token失败", task.getException());
+                            
+                            // 如果是SERVICE_NOT_AVAILABLE错误，实施重试机制
+                            Exception exception = task.getException();
+                            if (exception != null && exception.getMessage() != null && 
+                                exception.getMessage().contains("SERVICE_NOT_AVAILABLE")) {
+                                Log.i(TAG, "FCM服务暂时不可用，将在后续尝试重新获取Token");
+                                scheduleTokenRetry(context);
+                            }
+                            return;
+                        }
+
+                        // 获取新的FCM注册token
+                        String token = task.getResult();
+                        Log.d(TAG, "FCM Token 初始化成功: " + token);
+
+                        // 保存token
+                        saveFcmTokenStatic(context, token);
+                        
+                        // 发送到服务器
+                        // sendTokenToServerStatic(token);
+                    }
+                });
+        } catch (Exception e) {
+            Log.e(TAG, "初始化FCM Token异常: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 静态方法：保存FCM Token
+     */
+    private static void saveFcmTokenStatic(android.content.Context context, String token) {
+        try {
+            android.content.SharedPreferences prefs = context.getSharedPreferences("imsclient2_prefs", 
+                android.content.Context.MODE_PRIVATE);
+            prefs.edit().putString("fcm_token", token).apply();
+            Log.d(TAG, "FCM Token 已保存到本地存储");
+        } catch (Exception e) {
+            Log.e(TAG, "保存FCM Token失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 计划Token重试机制（处理SERVICE_NOT_AVAILABLE错误）
+     */
+    private static void scheduleTokenRetry(android.content.Context context) {
+        // 使用Handler延迟重试
+        android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            private int retryCount = 0;
+            private final int MAX_RETRY = 5;
+            private final long RETRY_DELAY_MS = 5000; // 5秒
+
+            @Override
+            public void run() {
+                if (retryCount < MAX_RETRY) {
+                    retryCount++;
+                    Log.i(TAG, "FCM Token 重试第 " + retryCount + " 次...");
+                    initializeFcmToken(context);
+                    
+                    // 指数退避重试
+                    handler.postDelayed(this, RETRY_DELAY_MS * retryCount);
+                } else {
+                    Log.w(TAG, "FCM Token 重试达到最大次数，停止重试");
+                }
+            }
+        }, 5000); // 5秒后开始第一次重试
+    }
 }

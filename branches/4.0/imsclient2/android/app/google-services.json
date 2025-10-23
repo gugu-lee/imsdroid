@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "123456789",
+    "project_number": "372211062027",
     "project_id": "imsclient2-demo",
-    "storage_bucket": "imsclient2-demo.appspot.com"
+    "storage_bucket": "imsclient2-demo.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789:android:abcd1234efgh5678",
+        "mobilesdk_app_id": "1:372211062027:android:f69fc4b2f8f44efe89be0e",
         "android_client_info": {
           "package_name": "com.imsclient2"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "123456789-abcdefghijklmnop.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDemoKeyForDevelopmentOnly"
+          "current_key": "AIzaSyCScMfRHBYbLFpm0UQzyU924bvCfgt-_24"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "123456789-abcdefghijklmnop.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

@@ -53,6 +53,17 @@ class MainApplication : NgnApplication(), ReactApplication {
             load()
         }
 
+        // 初始化 Firebase
+        try {
+            com.google.firebase.FirebaseApp.initializeApp(this)
+            android.util.Log.d("MainApplication", "Firebase 初始化成功")
+            
+            // 初始化 FCM Token
+            MyFirebaseMessagingService.initializeFcmToken(this)
+        } catch (e: Exception) {
+            android.util.Log.e("MainApplication", "Firebase 初始化失败: " + e.message, e)
+        }
+
         // 初始化 SQLite 数据库
         MessageDbHelper(this).writableDatabase.close()
         

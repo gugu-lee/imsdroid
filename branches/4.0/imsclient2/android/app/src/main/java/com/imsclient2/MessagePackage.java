@@ -21,6 +21,7 @@ public class MessagePackage implements ReactPackage {
             ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         modules.add(new MessageModule(reactContext));
+        modules.add(new FcmTestModule(reactContext));
         return modules;
     }
 }
