@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'r
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ChatScreen from '../screens/chat/ChatScreen';
+import { DiscoveryScreen } from '../screens/discovery';
 import settingsService from '../services/SettingsService';
 
 const Tab = createBottomTabNavigator();
@@ -51,15 +52,7 @@ const ContactsScreen = ({ navigation }) => (
   </SafeAreaView>
 );
 
-// 发现页面组件
-const DiscoverScreen = () => (
-  <SafeAreaView style={styles.screenContainer}>
-    <Text style={styles.header}>发现</Text>
-    <View style={styles.content}>
-      <Text style={styles.contentText}>这里是发现页面</Text>
-    </View>
-  </SafeAreaView>
-);
+// 发现页面组件现在使用完整的DiscoveryScreen
 
 // 我的页面组件
 const ProfileScreen = ({ navigation }) => {
@@ -168,7 +161,10 @@ const WeChatStyleHome = ({ navigation }) => {
         name="通讯录"
         children={() => <ContactsScreen navigation={navigation} />}
       />
-      <Tab.Screen name="发现" component={DiscoverScreen} />
+      <Tab.Screen 
+        name="发现" 
+        children={() => <DiscoveryScreen navigation={navigation} />}
+      />
       <Tab.Screen
         name="我"
         children={() => <ProfileScreen navigation={navigation} />}
