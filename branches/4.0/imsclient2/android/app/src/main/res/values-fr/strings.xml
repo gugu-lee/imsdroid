@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
+    <!-- App Name -->
+    <string name="app_name">Huohe Quantitatif</string>
+    
     <!-- Strings -->
     <string name="day_today">Aujourdh\'ui</string>
     <string name="day_yesterday">Hier</string>

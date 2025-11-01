@@ -28,9 +28,55 @@ const DEFAULT_CONFIG = {
 };
 
 // 基础URL配置（可根据环境变量或配置文件设置）
-let BASE_URL = __DEV__
-  ? 'http://192.168.10.6:7090/api/v1' // 开发环境
-  : 'https://api.yourapp.com/api/v1'; // 生产环境
+// Android模拟器访问本机服务器的特殊配置
+const initializeBaseUrl = () => {
+  if (!__DEV__) {
+    return 'https://api.yourapp.com/api/v1'; // 生产环境
+  }
+  
+  // 开发环境 - Android模拟器配置
+  // 10.0.2.2 是Android模拟器访问宿主机(本机)的特殊IP地址
+  // 如果使用Genymotion模拟器，请使用 10.0.3.2
+  // 如果使用真机调试，请使用本机的实际IP地址（如 192.168.1.100）
+  const LOCALHOST_PORTS = {
+    android_emulator: '10.0.2.2:7090',     // 标准Android模拟器
+    genymotion: '10.0.3.2:7090',           // Genymotion模拟器
+    real_device: '192.168.1.100:7090',     // 真机调试（需要替换为实际IP）
+    local_network: '192.168.10.6:7090'     // 局域网IP
+  };
+  
+  // 可以根据需要切换不同的配置
+  const selectedHost = LOCALHOST_PORTS.android_emulator;
+  
+  return `http://${selectedHost}/api/v1`;
+};
+
+let BASE_URL = initializeBaseUrl();
+
+/**
+ * 更新BASE_URL配置
+ * @param {string} type - 配置类型：'android_emulator' | 'genymotion' | 'real_device' | 'local_network'
+ * @param {string} customUrl - 自定义URL（可选）
+ */
+const updateBaseUrl = (type = 'android_emulator', customUrl = null) => {
+  if (customUrl) {
+    BASE_URL = customUrl;
+    return;
+  }
+  
+  const LOCALHOST_PORTS = {
+    android_emulator: '10.0.2.2:7090',     // 标准Android模拟器
+    genymotion: '10.0.3.2:7090',           // Genymotion模拟器
+    real_device: '192.168.1.100:7090',     // 真机调试（需要替换为实际IP）
+    local_network: '192.168.10.6:7090',    // 局域网IP
+  };
+  
+  if (LOCALHOST_PORTS[type]) {
+    BASE_URL = `http://${LOCALHOST_PORTS[type]}/api/v1`;
+  }
+  
+  console.log(`[Request] BASE_URL updated to: ${BASE_URL}`);
+};
 
 /**
  * 创建带超时的fetch请求
@@ -181,6 +227,16 @@ export const get = async (endpoint, options = {}) => {
       ...headers,
     };
 
+    // 🚀 [请求日志] 记录GET请求详情
+    console.log('🌐 [GET Request] ================================');
+    console.log('📍 [URL]:', url);
+    console.log('📋 [Headers]:', JSON.stringify(requestHeaders, null, 2));
+    console.log('🔧 [Params]:', JSON.stringify(params, null, 2));
+    console.log('⏱️  [Timeout]:', timeout + 'ms');
+    console.log('===============================================');
+
+    const requestStartTime = Date.now();
+
     // 发送请求
     const response = await fetchWithTimeout(url, {
       method: 'GET',
@@ -191,19 +247,43 @@ export const get = async (endpoint, options = {}) => {
     // 处理响应
     const responseData = await handleResponse(response);
 
+    const requestEndTime = Date.now();
+    const requestDuration = requestEndTime - requestStartTime;
+
+    // 🎯 [响应日志] 记录GET响应详情
+    console.log('📥 [GET Response] =============================');
+    console.log('📍 [URL]:', url);
+    console.log('📊 [Status]:', response.status, response.statusText);
+    console.log('⏱️  [Duration]:', requestDuration + 'ms');
+    console.log('📦 [Raw Response Data]:');
+    console.log(JSON.stringify(responseData, null, 2));
+    console.log('===============================================');
+
     // 如果服务器返回的数据已经是约定格式，直接返回
     if (responseData && typeof responseData === 'object' && 'code' in responseData) {
+      console.log('✅ [GET] 返回标准格式数据');
       return responseData;
     }
 
     // 否则包装成约定格式
-    return {
+    const wrappedResponse = {
       code: 0,
       message: 'success',
       payload: responseData,
     };
+    
+    console.log('🔄 [GET] 数据已包装为标准格式:');
+    console.log(JSON.stringify(wrappedResponse, null, 2));
+    
+    return wrappedResponse;
 
   } catch (error) {
+    // 记录错误日志
+    console.log('❌ [GET Error] ===============================');
+    console.log('📍 [Endpoint]:', endpoint);
+    console.log('🚨 [Error]:', error.message);
+    console.log('===============================================');
+    
     return handleError(error);
   }
 };
@@ -251,6 +331,17 @@ export const post = async (endpoint, data = {}, options = {}) => {
       body = data;
     }
 
+    // 🚀 [请求日志] 记录POST请求详情
+    console.log('🌐 [POST Request] ===============================');
+    console.log('📍 [URL]:', url);
+    console.log('📋 [Headers]:', JSON.stringify(requestHeaders, null, 2));
+    console.log('📦 [Request Data]:', JSON.stringify(data, null, 2));
+    console.log('🔧 [Content-Type]:', contentType);
+    console.log('⏱️  [Timeout]:', timeout + 'ms');
+    console.log('================================================');
+
+    const requestStartTime = Date.now();
+
     // 发送请求
     const response = await fetchWithTimeout(url, {
       method: 'POST',
@@ -262,19 +353,44 @@ export const post = async (endpoint, data = {}, options = {}) => {
     // 处理响应
     const responseData = await handleResponse(response);
 
+    const requestEndTime = Date.now();
+    const requestDuration = requestEndTime - requestStartTime;
+
+    // 🎯 [响应日志] 记录POST响应详情
+    console.log('📥 [POST Response] ==============================');
+    console.log('📍 [URL]:', url);
+    console.log('📊 [Status]:', response.status, response.statusText);
+    console.log('⏱️  [Duration]:', requestDuration + 'ms');
+    console.log('📦 [Raw Response Data]:');
+    console.log(JSON.stringify(responseData, null, 2));
+    console.log('================================================');
+
     // 如果服务器返回的数据已经是约定格式，直接返回
     if (responseData && typeof responseData === 'object' && 'code' in responseData) {
+      console.log('✅ [POST] 返回标准格式数据');
       return responseData;
     }
 
     // 否则包装成约定格式
-    return {
+    const wrappedResponse = {
       code: 0,
       message: 'success',
       payload: responseData,
     };
+    
+    console.log('🔄 [POST] 数据已包装为标准格式:');
+    console.log(JSON.stringify(wrappedResponse, null, 2));
+    
+    return wrappedResponse;
 
   } catch (error) {
+    // 记录错误日志
+    console.log('❌ [POST Error] ================================');
+    console.log('📍 [Endpoint]:', endpoint);
+    console.log('📦 [Request Data]:', JSON.stringify(data, null, 2));
+    console.log('🚨 [Error]:', error.message);
+    console.log('===============================================');
+    
     return handleError(error);
   }
 };
@@ -380,9 +496,13 @@ export default {
   request,
   setBaseUrl,
   getBaseUrl,
+  updateBaseUrl,
   isSuccess,
   getPayload,
   getErrorMessage,
   createSuccessResponse,
   createErrorResponse,
 };
+
+// 独立导出updateBaseUrl函数供开发时使用
+export { updateBaseUrl };

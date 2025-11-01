@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">IMSDroid</string>
+    <string name="app_name">火禾量化</string>
 
 <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->

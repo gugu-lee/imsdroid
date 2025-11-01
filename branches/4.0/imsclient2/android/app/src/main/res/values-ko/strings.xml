@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">화허 퀀트</string>
+    
+    <!-- Common Strings -->
+    <string name="action_settings">설정</string>
+    <string name="day_today">오늘</string>
+    <string name="day_yesterday">어제</string>
+    <string name="next">다음</string>
+    <string name="previous">이전</string>
+    
+    <!-- Navigation -->
+    <string name="first_fragment_label">첫 번째 프래그먼트</string>
+    <string name="second_fragment_label">두 번째 프래그먼트</string>
+</resources>

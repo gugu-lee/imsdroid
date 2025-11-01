@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">火禾クオンツ</string>
+    
+    <!-- Common Strings -->
+    <string name="action_settings">設定</string>
+    <string name="day_today">今日</string>
+    <string name="day_yesterday">昨日</string>
+    <string name="next">次へ</string>
+    <string name="previous">前へ</string>
+    
+    <!-- Navigation -->
+    <string name="first_fragment_label">第一フラグメント</string>
+    <string name="second_fragment_label">第二フラグメント</string>
+</resources>

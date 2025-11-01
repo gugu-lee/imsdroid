@@ -27,6 +27,17 @@ import ConfigValidationService from './services/ConfigValidationService';
 import { StartupService } from './services/StartupService';
 import callService from './services/CallService';
 
+// 导入网络配置（开发环境自动配置）
+if (__DEV__) {
+  import('./utils/networkConfig').then(({ configureNetwork }) => {
+    // 在开发环境中自动配置Android模拟器网络
+    console.log('🌐 [App] 正在配置开发环境网络...');
+    configureNetwork('ANDROID_EMULATOR');
+  }).catch(error => {
+    console.warn('⚠️ [App] 网络配置加载失败:', error);
+  });
+}
+
 const { LoginModule, CallModule } = NativeModules;
 const Stack = createStackNavigator();
 

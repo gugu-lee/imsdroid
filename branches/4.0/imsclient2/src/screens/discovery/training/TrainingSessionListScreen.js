@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   RefreshControl,
   TextInput,
 } from 'react-native';
+import request from '../../../utils/request';
 
 const TrainingSessionListScreen = ({ navigation }) => {
   const [sessions, setSessions] = useState([]);
@@ -16,88 +17,110 @@ const TrainingSessionListScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // 模拟训练session数据
+  // 组件挂载时初始加载
   useEffect(() => {
     loadSessions();
+  }, [loadSessions]);
+
+  /**
+   * 计算训练持续时间
+   * @param {string|null} startTime - 训练开始时间
+   * @param {string|null} endTime - 训练结束时间
+   * @returns {string} 格式化的持续时间
+   */
+  const calculateDuration = useCallback((startTime, endTime) => {
+    if (!startTime) {
+      return '00:00:00';
+    }
+    
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date();
+    const diffMs = end - start;
+    
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
 
-  const loadSessions = () => {
-    // 模拟从API加载数据
-    const mockSessions = [
-      {
-        id: 1,
-        name: '股价预测模型V2',
-        modelType: 'LSTM',
-        status: 'completed',
-        accuracy: 87.5,
-        duration: '02:15:30',
-        createdAt: '2024-10-29 10:30:00',
-        completedAt: '2024-10-29 12:45:30',
-        epochs: 100,
-        currentEpoch: 100,
-        loss: 0.0245,
-      },
-      {
-        id: 2,
-        name: '市场趋势分析模型',
-        modelType: 'Transformer',
-        status: 'training',
-        accuracy: 72.8,
-        duration: '01:45:20',
-        createdAt: '2024-10-29 14:20:00',
-        completedAt: null,
-        epochs: 150,
-        currentEpoch: 85,
-        loss: 0.1156,
-      },
-      {
-        id: 3,
-        name: '风险评估模型',
-        modelType: 'XGBoost',
-        status: 'pending',
-        accuracy: 0,
-        duration: '00:00:00',
-        createdAt: '2024-10-29 16:10:00',
-        completedAt: null,
-        epochs: 80,
-        currentEpoch: 0,
-        loss: 0,
-      },
-      {
-        id: 4,
-        name: '情感分析模型',
-        modelType: 'BERT',
-        status: 'failed',
-        accuracy: 0,
-        duration: '00:25:10',
-        createdAt: '2024-10-28 09:15:00',
-        completedAt: '2024-10-28 09:40:10',
-        epochs: 50,
-        currentEpoch: 12,
-        loss: 2.547,
-      },
-      {
-        id: 5,
-        name: '量化交易策略',
-        modelType: 'GRU',
-        status: 'completed',
-        accuracy: 91.2,
-        duration: '03:22:45',
-        createdAt: '2024-10-28 14:00:00',
-        completedAt: '2024-10-28 17:22:45',
-        epochs: 200,
-        currentEpoch: 200,
-        loss: 0.0189,
-      },
-    ];
-    setSessions(mockSessions);
-  };
+  /**
+   * 转换API数据格式为UI需要的格式
+   * @param {Object} apiSession - API返回的session对象
+   * @returns {Object} 转换后的session对象
+   */
+  const transformSessionData = useCallback((apiSession) => {
+    return {
+      id: apiSession.session_id,
+      name: apiSession.session_name,
+      modelType: apiSession.model_type,
+      status: apiSession.status,
+      // 模拟的UI字段 - 实际应该从训练统计API获取
+      accuracy: 0, // 需要从训练统计API获取
+      duration: calculateDuration(apiSession.training_start_time, apiSession.training_end_time),
+      createdAt: apiSession.created_at,
+      completedAt: apiSession.training_end_time,
+      epochs: 100, // 需要从训练配置获取
+      currentEpoch: 0, // 需要从训练进度API获取
+      loss: 0, // 需要从训练统计API获取
+      description: apiSession.description,
+      modelFilePath: apiSession.model_file_path,
+      dataStartDate: apiSession.data_start_date,
+      dataEndDate: apiSession.data_end_date,
+      updatedAt: apiSession.updated_at,
+    };
+  }, [calculateDuration]);
+
+  /**
+   * 从API加载训练session数据
+   */
+  const loadSessions = useCallback(async () => {
+    try {
+      console.log('[TrainingSessionList] 加载训练会话列表...');
+      
+      // 使用POST方法获取session列表，可以传递查询条件
+      const requestData = {
+        // 可以添加查询条件，如分页、筛选等
+        page: 1,
+        page_size: 100,
+        // status: filterStatus === 'all' ? null : filterStatus,
+        // search: searchText || null,
+      };
+      
+      const response = await request.post('/session/list', requestData);
+      
+      if (request.isSuccess(response)) {
+        const apiSessions = request.getPayload(response).data || [];
+        console.log('[TrainingSessionList] API返回数据:', apiSessions);
+        
+        // 转换数据格式
+        const transformedSessions = apiSessions.map(transformSessionData);
+        console.log('[TrainingSessionList] 转换后的数据:', transformedSessions);
+        
+        setSessions(transformedSessions);
+      } else {
+        const errorMsg = request.getErrorMessage(response);
+        console.error('[TrainingSessionList] 加载失败:', errorMsg);
+        
+        Alert.alert('加载失败', `无法加载训练会话列表: ${errorMsg}`);
+        // 失败时保持现有数据不变
+      }
+    } catch (error) {
+      console.error('[TrainingSessionList] 网络请求错误:', error);
+      Alert.alert(
+        '网络错误',
+        `请求失败: ${error.message}\n\n请检查网络连接和服务器状态`
+      );
+    }
+  }, [transformSessionData, filterStatus, searchText]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟加载
-    loadSessions();
-    setRefreshing(false);
+    try {
+      await loadSessions();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleSessionPress = (session) => {
@@ -127,8 +150,25 @@ const TrainingSessionListScreen = ({ navigation }) => {
         {
           text: '删除',
           style: 'destructive',
-          onPress: () => {
-            setSessions(prev => prev.filter(s => s.id !== sessionId));
+          onPress: async () => {
+            try {
+              console.log('[TrainingSessionList] 删除训练会话:', sessionId);
+              
+              const response = await request.post(`/sessions/${sessionId}/delete`);
+              
+              if (request.isSuccess(response)) {
+                // 删除成功，从本地状态中移除
+                setSessions(prev => prev.filter(s => s.id !== sessionId));
+                console.log('[TrainingSessionList] 删除成功');
+              } else {
+                const errorMsg = request.getErrorMessage(response);
+                console.error('[TrainingSessionList] 删除失败:', errorMsg);
+                Alert.alert('删除失败', errorMsg);
+              }
+            } catch (error) {
+              console.error('[TrainingSessionList] 删除请求错误:', error);
+              Alert.alert('删除失败', `网络请求失败: ${error.message}`);
+            }
           },
         },
       ]
@@ -151,7 +191,9 @@ const TrainingSessionListScreen = ({ navigation }) => {
   };
 
   const formatDuration = (duration) => {
-    if (!duration || duration === '00:00:00') return '--';
+    if (!duration || duration === '00:00:00') {
+      return '--';
+    }
     return duration;
   };
 
@@ -161,9 +203,15 @@ const TrainingSessionListScreen = ({ navigation }) => {
     const diffTime = Math.abs(now - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 1) return '今天';
-    if (diffDays === 2) return '昨天';
-    if (diffDays <= 7) return `${diffDays - 1}天前`;
+    if (diffDays === 1) {
+      return '今天';
+    }
+    if (diffDays === 2) {
+      return '昨天';
+    }
+    if (diffDays <= 7) {
+      return `${diffDays - 1}天前`;
+    }
     return date.toLocaleDateString('zh-CN');
   };
 
